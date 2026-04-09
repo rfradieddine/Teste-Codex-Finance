@@ -4,13 +4,18 @@ import { PageHead, TipPanel } from "@/components/finflow-sections";
 import { bootstrapSql } from "@/lib/db";
 import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
 
-export default async function SettingsPage() {
-  const snapshot = await getFinFlowSnapshot();
-  const closureStatus = await getMonthlyClosureStatus();
-  const monthState = await getCurrentMonthLockState();
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ month?: string }>;
+}) {
+  const params = await searchParams;
+  const snapshot = await getFinFlowSnapshot(params?.month);
+  const closureStatus = await getMonthlyClosureStatus(snapshot.monthKey);
+  const monthState = await getCurrentMonthLockState(snapshot.monthKey);
 
   return (
-    <AppShell currentPath="/settings" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
+    <AppShell currentPath="/settings" monthKey={snapshot.monthKey} monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
       <PageHead
         title="Configuracoes"
         description="Espaco para preparar a conexao com Postgres na Vercel e guardar detalhes tecnicos sem atrapalhar o fluxo principal."
@@ -25,6 +30,8 @@ export default async function SettingsPage() {
               <p>{getDatabaseStatus()}</p>
             </div>
             <form action={monthState.isClosed ? reopenCurrentMonthAction : closeCurrentMonthAction}>
+              <input type="hidden" name="month_key" value={snapshot.monthKey} />
+              <input type="hidden" name="redirect_to" value={`/settings?month=${snapshot.monthKey}`} />
               <button className="mini-button mini-button-secondary" type="submit">
                 {monthState.actionLabel}
               </button>

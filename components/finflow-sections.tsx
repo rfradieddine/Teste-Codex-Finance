@@ -1,7 +1,11 @@
 import Link from "next/link";
-import type { Account, Card, FinFlowSnapshot, FixedExpense, IncomeEntry, MonthlyMetric, PlanningCategory, WeeklyLog } from "@/lib/types";
+import type { Account, Card, CardInvoice, FinFlowSnapshot, FixedExpense, IncomeEntry, MonthlyMetric, PlanningCategory, WeeklyLog } from "@/lib/types";
 
 type ActionFn = (formData: FormData) => Promise<void>;
+
+function buildEditHref(base: string, query: string) {
+  return `${base}${base.includes("?") ? "&" : "?"}${query}`;
+}
 
 export function FlashNotice({
   message,
@@ -65,29 +69,46 @@ export function PageHead({
 }
 
 export function CardPreview({ card }: { card?: Card }) {
+  if (!card) {
+    return (
+      <section className="card-preview">
+        <div className="card-preview-glow card-preview-glow-blue" />
+        <div className="card-preview-glow card-preview-glow-green" />
+
+        <div className="card-preview-empty">
+          <p className="eyebrow">Cartao selecionado</p>
+          <strong className="card-limit">Nenhum cartao cadastrado</strong>
+          <p className="card-preview-copy">
+            Assim que voce cadastrar um cartao, esta area passa a mostrar limite, fechamento e vencimento reais.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="card-preview">
       <div className="card-preview-glow card-preview-glow-blue" />
       <div className="card-preview-glow card-preview-glow-green" />
 
       <div className="card-preview-row">
-        <span className="card-brand">{card?.nickname?.toUpperCase() ?? "TITANIUM"}</span>
+        <span className="card-brand">{card.nickname.toUpperCase()}</span>
         <span className="card-chip">11</span>
       </div>
 
       <div>
         <p className="eyebrow">Limite atual</p>
-        <strong className="card-limit">{card?.limit ?? "R$ 25.000,00"}</strong>
+        <strong className="card-limit">{card.limit}</strong>
       </div>
 
       <div className="card-preview-row card-preview-bottom">
         <div>
-          <p className="eyebrow">Titular</p>
-          <span className="card-holder">RAFAEL S.</span>
+          <p className="eyebrow">Cartao</p>
+          <span className="card-holder">{card.nickname}</span>
         </div>
         <div>
           <p className="eyebrow">Vencimento</p>
-          <span className="card-holder">Dia {card?.dueDay ?? 28}</span>
+          <span className="card-holder">Dia {card.dueDay}</span>
         </div>
       </div>
     </section>
@@ -113,11 +134,13 @@ export function AccountsList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   accounts: Account[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel compact-panel">
@@ -151,13 +174,15 @@ export function AccountsList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && account.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=account&id=${account.id}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=account&id=${account.id}`)}>
                   Editar
                 </Link>
               ) : null}
               {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={account.id ?? ""} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/cards"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -176,11 +201,13 @@ export function CardsList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   cards: Card[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel compact-panel">
@@ -214,13 +241,15 @@ export function CardsList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && card.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=card&id=${card.id}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=card&id=${card.id}`)}>
                   Editar
                 </Link>
               ) : null}
               {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={card.id ?? ""} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/cards"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -239,11 +268,13 @@ export function FixedExpensesList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   fixedExpenses: FixedExpense[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel compact-panel">
@@ -275,13 +306,15 @@ export function FixedExpensesList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && item.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=fixed-expense&id=${item.id}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=fixed-expense&id=${item.id}`)}>
                   Editar
                 </Link>
               ) : null}
               {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/fixed-expenses"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -300,11 +333,13 @@ export function WeeklyLogsList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   weeklyLogs: WeeklyLog[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel">
@@ -338,13 +373,15 @@ export function WeeklyLogsList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && item.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=weekly-log&id=${item.id}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=weekly-log&id=${item.id}`)}>
                   Editar
                 </Link>
               ) : null}
               {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/cards"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -393,11 +430,13 @@ export function PlanningList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   planning: PlanningCategory[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel">
@@ -424,13 +463,15 @@ export function PlanningList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && item.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=planning&id=${item.id}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=planning&id=${item.id}`)}>
                   Editar
                 </Link>
               ) : null}
               {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/planning"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -449,11 +490,13 @@ export function IncomesList({
   deleteAction,
   editHrefBase,
   locked,
+  monthKey,
 }: {
   incomes: IncomeEntry[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
   locked?: boolean;
+  monthKey?: string;
 }) {
   return (
     <section className="panel compact-panel">
@@ -487,7 +530,7 @@ export function IncomesList({
             <div className="row-actions">
               {locked ? <span className="lock-badge">Mes fechado</span> : null}
               {!locked && editHrefBase && income.id ? (
-                <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=income&id=${income.id}&incomeType=${income.type}`}>
+                <Link className="mini-button mini-button-secondary" href={buildEditHref(editHrefBase, `edit=income&id=${income.id}&incomeType=${income.type}`)}>
                   Editar
                 </Link>
               ) : null}
@@ -495,6 +538,8 @@ export function IncomesList({
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={income.id ?? ""} />
                   <input type="hidden" name="type" value={income.type} />
+                  <input type="hidden" name="month_key" value={monthKey ?? ""} />
+                  <input type="hidden" name="redirect_to" value={editHrefBase ?? "/planning"} />
                   <button className="mini-button" type="submit">
                     Excluir
                   </button>
@@ -536,11 +581,56 @@ export function ComparisonBars({ comparison }: { comparison: MonthlyMetric[] }) 
   );
 }
 
+export function CardInvoicesBoard({ invoices }: { invoices: CardInvoice[] }) {
+  return (
+    <section className="panel">
+      <div className="section-header">
+        <div>
+          <h2>Faturas do cartao</h2>
+          <p>Visao da fatura atual e das proximas competencias por cartao.</p>
+        </div>
+      </div>
+
+      <div className="invoice-grid">
+        {invoices.length === 0 ? (
+          <EmptyState
+            title="Nenhuma fatura disponivel"
+            description="Cadastre um cartao e informe lancamentos semanais para visualizar fatura atual e proximas."
+          />
+        ) : null}
+        {invoices.map((invoice) => (
+          <article className="invoice-card" key={invoice.id}>
+            <div className="invoice-head">
+              <div>
+                <strong>{invoice.cardName}</strong>
+                <span>{invoice.monthLabel}</span>
+              </div>
+              <span className={invoice.isProjected ? "invoice-badge invoice-badge-muted" : "invoice-badge"}>
+                {invoice.status}
+              </span>
+            </div>
+            <div className="invoice-amount">{invoice.amount}</div>
+            <div className="invoice-meta">
+              <span>{invoice.dueLabel}</span>
+              <span>{invoice.closingLabel}</span>
+            </div>
+            <div className="invoice-foot">
+              <span>{invoice.utilization}</span>
+              <span>{invoice.isProjected ? "Sem lancamentos ainda" : "Acumulado do mes"}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function DashboardOverview({ snapshot }: { snapshot: FinFlowSnapshot }) {
   return (
     <div className="dashboard-grid">
       <div className="main-column">
         <ComparisonBars comparison={snapshot.monthlyComparison} />
+        <CardInvoicesBoard invoices={snapshot.cardInvoices} />
         <WeeklyLogsList weeklyLogs={snapshot.weeklyLogs} />
         <PlanningTable planning={snapshot.planning} />
       </div>

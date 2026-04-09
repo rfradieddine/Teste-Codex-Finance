@@ -15,11 +15,12 @@ import { getCurrentMonthLockState, getFinFlowSnapshot } from "@/lib/repository";
 export default async function PlanningPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string; incomeType?: "recurring" | "one_time"; flash?: string; tone?: "success" | "error" }>;
+  searchParams?: Promise<{ edit?: string; id?: string; incomeType?: "recurring" | "one_time"; flash?: string; tone?: "success" | "error"; month?: string }>;
 }) {
-  const snapshot = await getFinFlowSnapshot();
-  const monthState = await getCurrentMonthLockState();
   const params = await searchParams;
+  const snapshot = await getFinFlowSnapshot(params?.month);
+  const monthState = await getCurrentMonthLockState(snapshot.monthKey);
+  const monthRoute = `/planning?month=${snapshot.monthKey}`;
 
   const selectedPlanning =
     params?.edit === "planning" ? snapshot.planning.find((item) => item.id === params.id) : undefined;
@@ -28,7 +29,7 @@ export default async function PlanningPage({
     params?.edit === "income" ? snapshot.incomes.find((item) => item.id === params.id && item.type === params.incomeType) : undefined;
 
   return (
-    <AppShell currentPath="/planning" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
+    <AppShell currentPath="/planning" monthKey={snapshot.monthKey} monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
       <PageHead
         title="Planejamento"
         description="Modulo para orcamento por categoria com comparacao entre planejado e realizado, agora com receitas persistidas."
@@ -47,9 +48,10 @@ export default async function PlanningPage({
           <PlanningForm
             action={selectedPlanning ? updatePlanningAction : createPlanningAction}
             initialData={selectedPlanning}
-            cancelHref={selectedPlanning ? "/planning" : undefined}
-            redirectTo="/planning"
+            cancelHref={selectedPlanning ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
           <section className="panel compact-panel">
             <div className="section-header">
@@ -58,6 +60,7 @@ export default async function PlanningPage({
                 <p>Copie o planejamento atual para o proximo mes sem duplicar categorias existentes.</p>
               </div>
               <form action={copyPlanningToNextMonthAction}>
+                <input type="hidden" name="month_key" value={snapshot.monthKey} />
                 <button className="mini-button mini-button-secondary" type="submit">
                   Copiar para o proximo mes
                 </button>
@@ -67,8 +70,9 @@ export default async function PlanningPage({
           <PlanningList
             planning={snapshot.planning}
             deleteAction={deletePlanningAction}
-            editHrefBase="/planning"
+            editHrefBase={monthRoute}
             locked={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
         </div>
 
@@ -76,11 +80,12 @@ export default async function PlanningPage({
           <IncomeForm
             action={selectedIncome ? updateIncomeAction : createIncomeAction}
             initialData={selectedIncome}
-            cancelHref={selectedIncome ? "/planning" : undefined}
-            redirectTo="/planning"
+            cancelHref={selectedIncome ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
-          <IncomesList incomes={snapshot.incomes} deleteAction={deleteIncomeAction} editHrefBase="/planning" locked={monthState.isClosed} />
+          <IncomesList incomes={snapshot.incomes} deleteAction={deleteIncomeAction} editHrefBase={monthRoute} locked={monthState.isClosed} monthKey={snapshot.monthKey} />
           <QuickStats stats={snapshot.quickStats} />
           <TipPanel
             title="Automacao mensal"

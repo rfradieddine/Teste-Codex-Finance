@@ -1,13 +1,20 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { bootstrapSql, getDbClient } from "@/lib/db";
 import { mockSnapshot } from "@/lib/mock-data";
-import type { FinFlowSnapshot, IncomeEntry, MonthLockState } from "@/lib/types";
+import { getCurrentMonthKey, normalizeMonthKey, shiftMonthKey } from "@/lib/months";
+import type { CardInvoice, FinFlowSnapshot, IncomeEntry, MonthLockState } from "@/lib/types";
 
-export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
+export async function getFinFlowSnapshot(requestedMonthKey?: string): Promise<FinFlowSnapshot> {
   noStore();
+  const monthKey = normalizeMonthKey(requestedMonthKey);
 
   if (!process.env.DATABASE_URL) {
-    return mockSnapshot;
+    return {
+      ...mockSnapshot,
+      monthKey,
+      currentMonth: formatMonthHeading(monthKey),
+      monthlyComparison: buildEmptyMonthlyComparison(monthKey),
+    };
   }
 
   const sql = await getDbClient();
@@ -18,9 +25,8 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
   try {
     await sql.unsafe(bootstrapSql);
 
-    const monthKey = getCurrentMonthKey();
-
-    const [accounts, cards, fixedExpenses, weeklyLogs, recurringIncome, oneTimeIncome, planning] =
+    const invoiceMonthKeys = Array.from({ length: 3 }, (_, index) => shiftMonthKey(monthKey, index));
+    const [accounts, cards, fixedExpenses, weeklyLogs, invoiceLogs, recurringIncome, oneTimeIncome, planning] =
       await Promise.all([
         sql<{
           id: string;
@@ -52,6 +58,12 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
           week_label: string;
           cumulative_amount: string;
         }[]>`select id, card_id, week_label, cumulative_amount::text from weekly_card_logs where month_key = ${monthKey} order by created_at asc`,
+        sql<{
+          card_id: string;
+          month_key: string;
+          cumulative_amount: string;
+          created_at: string;
+        }[]>`select card_id, month_key, cumulative_amount::text, created_at::text from weekly_card_logs where month_key = any(${invoiceMonthKeys}) order by created_at asc`,
         sql<{
           id: string;
           name: string;
@@ -106,6 +118,7 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
     }));
 
     const incomes = [...recurringIncomeItems, ...oneTimeIncomeItems];
+    const cardInvoices = buildCardInvoices(cards, invoiceLogs, monthKey);
 
     const totalAccounts = accounts.reduce((sum, item) => sum + Number(item.balance), 0);
     const totalCardSpent = weeklyLogs.length > 0 ? Number(weeklyLogs[weeklyLogs.length - 1].cumulative_amount) : 0;
@@ -150,20 +163,13 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
       month_key: string;
       available_balance: string;
       closed_at: string | null;
-    }[]>`select month_key, available_balance::text, closed_at::text from monthly_snapshots order by month_key desc limit 6`;
+    }[]>`select month_key, available_balance::text, closed_at::text from monthly_snapshots order by month_key desc limit 24`;
 
-    const monthlyComparison = monthlySnapshots.length
-      ? [...monthlySnapshots]
-          .reverse()
-          .map((item, index, arr) => ({
-            label: formatMonthLabel(item.month_key),
-            value: formatCurrency(item.available_balance),
-            detail: item.closed_at ? "Fechado" : index === arr.length - 1 ? "Atual" : "Historico",
-          }))
-      : buildEmptyMonthlyComparison(monthKey);
+    const monthlyComparison = buildMonthlyComparison(monthKey, monthlySnapshots);
 
     return {
       ...mockSnapshot,
+      monthKey,
       currentMonth: currentMonthLabel,
       closingInfo,
       heroMetrics: [
@@ -180,6 +186,7 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
           tone: "secondary",
         },
       ],
+      cardInvoices,
       quickStats: [
         {
           label: "Total em contas",
@@ -263,7 +270,12 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
       monthlyComparison,
     };
   } catch {
-    return mockSnapshot;
+    return {
+      ...mockSnapshot,
+      monthKey,
+      currentMonth: formatMonthHeading(monthKey),
+      monthlyComparison: buildEmptyMonthlyComparison(monthKey),
+    };
   } finally {
     await sql.end({ timeout: 1 });
   }
@@ -275,13 +287,13 @@ export function getDatabaseStatus() {
     : "Modo demo: usando dados locais ate configurar DATABASE_URL.";
 }
 
-export async function getMonthlyClosureStatus() {
-  const state = await getCurrentMonthLockState();
+export async function getMonthlyClosureStatus(monthKey?: string) {
+  const state = await getCurrentMonthLockState(monthKey);
   return state.statusMessage;
 }
 
-export async function getCurrentMonthLockState(): Promise<MonthLockState> {
-  const monthKey = getCurrentMonthKey();
+export async function getCurrentMonthLockState(requestedMonthKey?: string): Promise<MonthLockState> {
+  const monthKey = normalizeMonthKey(requestedMonthKey);
 
   if (!process.env.DATABASE_URL) {
     return {
@@ -332,12 +344,6 @@ function formatCurrency(value: number | string) {
     style: "currency",
     currency: "BRL",
   }).format(Number(value) || 0);
-}
-
-function getCurrentMonthKey() {
-  const now = new Date();
-  const month = `${now.getUTCMonth() + 1}`.padStart(2, "0");
-  return `${now.getUTCFullYear()}-${month}`;
 }
 
 function isRecurringActiveInMonth(
@@ -405,12 +411,12 @@ function getClosingInfo(cards: { due_day: number }[]) {
 }
 
 function buildEmptyMonthlyComparison(monthKey: string) {
-  const [year, month] = monthKey.split("-").map(Number);
   const items = [];
 
   for (let offset = 5; offset >= 0; offset -= 1) {
+    const itemMonthKey = shiftMonthKey(monthKey, -offset);
+    const [year, month] = itemMonthKey.split("-").map(Number);
     const date = new Date(Date.UTC(year, month - 1, 1));
-    date.setUTCMonth(date.getUTCMonth() - offset);
 
     items.push({
       label: date
@@ -426,4 +432,73 @@ function buildEmptyMonthlyComparison(monthKey: string) {
   }
 
   return items;
+}
+
+function buildMonthlyComparison(
+  selectedMonthKey: string,
+  snapshots: { month_key: string; available_balance: string; closed_at: string | null }[],
+) {
+  if (snapshots.length === 0) {
+    return buildEmptyMonthlyComparison(selectedMonthKey);
+  }
+
+  const snapshotMap = new Map(snapshots.map((item) => [item.month_key, item]));
+
+  return Array.from({ length: 6 }, (_, index) => {
+    const monthKey = shiftMonthKey(selectedMonthKey, index - 5);
+    const item = snapshotMap.get(monthKey);
+
+    return {
+      label: formatMonthLabel(monthKey),
+      value: formatCurrency(item?.available_balance ?? 0),
+      detail: monthKey === selectedMonthKey ? (item?.closed_at ? "Fechado" : "Atual") : item?.closed_at ? "Fechado" : item ? "Historico" : "Sem dados",
+    };
+  });
+}
+
+function buildCardInvoices(
+  cards: { id: string; nickname: string; credit_limit: string; closing_day: number; due_day: number }[],
+  logs: { card_id: string; month_key: string; cumulative_amount: string; created_at: string }[],
+  selectedMonthKey: string,
+): CardInvoice[] {
+  const invoiceMonths = Array.from({ length: 3 }, (_, index) => shiftMonthKey(selectedMonthKey, index));
+
+  return cards.flatMap((card) =>
+    invoiceMonths.map((invoiceMonthKey, index) => {
+      const monthLogs = logs
+        .filter((log) => log.card_id === card.id && log.month_key === invoiceMonthKey)
+        .sort((left, right) => left.created_at.localeCompare(right.created_at));
+
+      const latestAmount = monthLogs.length ? Number(monthLogs[monthLogs.length - 1].cumulative_amount) : 0;
+      const limit = Number(card.credit_limit) || 0;
+      const usage = limit > 0 ? `${Math.round((latestAmount / limit) * 100)}% do limite` : "Sem limite";
+
+      return {
+        id: `${card.id}-${invoiceMonthKey}`,
+        cardId: card.id,
+        cardName: card.nickname,
+        monthKey: invoiceMonthKey,
+        monthLabel: formatShortMonthYear(invoiceMonthKey),
+        amount: formatCurrency(latestAmount),
+        amountInput: String(latestAmount),
+        dueLabel: `Vence dia ${String(card.due_day).padStart(2, "0")}`,
+        closingLabel: `Fecha dia ${String(card.closing_day).padStart(2, "0")}`,
+        status: index === 0 ? "Fatura atual" : index === 1 ? "Proxima fatura" : "Fatura futura",
+        utilization: usage,
+        isProjected: monthLogs.length === 0,
+      };
+    }),
+  );
+}
+
+function formatShortMonthYear(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  })
+    .format(new Date(Date.UTC(year, month - 1, 1)))
+    .replace(".", "")
+    .replace(/^\w/, (char) => char.toUpperCase());
 }

@@ -6,15 +6,15 @@ import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot, getMon
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ flash?: string; tone?: "success" | "error" }>;
+  searchParams?: Promise<{ flash?: string; tone?: "success" | "error"; month?: string }>;
 }) {
-  const snapshot = await getFinFlowSnapshot();
   const params = await searchParams;
-  const closureStatus = await getMonthlyClosureStatus();
-  const monthState = await getCurrentMonthLockState();
+  const snapshot = await getFinFlowSnapshot(params?.month);
+  const closureStatus = await getMonthlyClosureStatus(snapshot.monthKey);
+  const monthState = await getCurrentMonthLockState(snapshot.monthKey);
 
   return (
-    <AppShell currentPath="/dashboard" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
+    <AppShell currentPath="/dashboard" monthKey={snapshot.monthKey} monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
       <PageHead
         title="Dashboard"
         description="Painel central do FinFlow com saldo disponivel, comparativo mensal, lancamentos semanais e leitura rapida para celular."
@@ -26,6 +26,8 @@ export default async function DashboardPage({
 
       <footer className="footer-actions">
         <form action={monthState.isClosed ? reopenCurrentMonthAction : closeCurrentMonthAction}>
+          <input type="hidden" name="month_key" value={snapshot.monthKey} />
+          <input type="hidden" name="redirect_to" value={`/dashboard?month=${snapshot.monthKey}`} />
           <button className="primary-button" type="submit">
             {monthState.actionLabel}
           </button>

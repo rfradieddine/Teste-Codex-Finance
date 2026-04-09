@@ -160,6 +160,12 @@ svg {
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
+.primary-button,
+.ghost-button,
+.mini-button {
+  position: relative;
+}
+
 .quick-action:hover,
 .primary-button:hover {
   transform: translateY(-1px);
@@ -447,6 +453,10 @@ svg {
 .ghost-button {
   width: 100%;
   margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
   border-radius: 16px;
   background: var(--surface-highest);
   padding: 0.95rem 1rem;
@@ -582,6 +592,21 @@ svg {
   align-items: flex-end;
 }
 
+.card-preview-empty {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.75rem;
+  align-content: center;
+  min-height: 100%;
+}
+
+.card-preview-copy {
+  margin: 0;
+  color: var(--muted);
+  max-width: 28ch;
+}
+
 .mini-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -656,6 +681,7 @@ svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   border: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -677,6 +703,19 @@ svg {
 
 .mini-button-secondary:hover {
   background: rgba(110, 155, 255, 0.2);
+}
+
+.is-pending {
+  opacity: 0.78;
+}
+
+.button-spinner {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
 }
 
 .form-actions {
@@ -854,6 +893,66 @@ svg {
   box-shadow: 0 0 15px rgba(63, 255, 139, 0.18);
 }
 
+.invoice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.invoice-card {
+  display: grid;
+  gap: 0.9rem;
+  border-radius: 20px;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.invoice-head,
+.invoice-meta,
+.invoice-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.invoice-head strong,
+.invoice-amount {
+  font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
+}
+
+.invoice-head strong {
+  display: block;
+}
+
+.invoice-head span,
+.invoice-meta span,
+.invoice-foot span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.invoice-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(63, 255, 139, 0.12);
+  color: var(--primary) !important;
+  padding: 0.35rem 0.7rem;
+  font-weight: 700;
+}
+
+.invoice-badge-muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted) !important;
+}
+
+.invoice-amount {
+  font-size: 1.8rem;
+  letter-spacing: -0.05em;
+}
+
 .settings-grid {
   display: grid;
   gap: 1.5rem;
@@ -912,6 +1011,80 @@ svg {
 .auth-form {
   display: grid;
   gap: 1rem;
+}
+
+.route-loading-shell {
+  min-height: 100vh;
+  padding: 1.5rem 2rem 2rem;
+}
+
+.route-loading-panel {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.route-loading-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.92fr);
+  gap: 1.5rem;
+}
+
+.route-loading-column {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.route-loading-card,
+.route-loading-bar {
+  border-radius: 24px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.route-loading-bar {
+  height: 132px;
+}
+
+.route-loading-bar-lg {
+  width: min(100%, 920px);
+}
+
+.route-loading-card {
+  height: 220px;
+}
+
+.route-loading-card-tall {
+  height: 280px;
+}
+
+.route-loading-card-medium {
+  height: 180px;
+}
+
+.route-loading-card-small {
+  height: 140px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -999,5 +1172,13 @@ svg {
 
   .comparison-bars {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .invoice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .route-loading-grid {
+    grid-template-columns: 1fr;
   }
 }

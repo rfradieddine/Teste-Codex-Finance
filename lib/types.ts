@@ -55,6 +55,21 @@ export type MonthlyMetric = {
   tone?: "primary" | "secondary";
 };
 
+export type CardInvoice = {
+  id: string;
+  cardId?: string;
+  cardName: string;
+  monthKey: string;
+  monthLabel: string;
+  amount: string;
+  amountInput?: string;
+  dueLabel: string;
+  closingLabel: string;
+  status: string;
+  utilization: string;
+  isProjected?: boolean;
+};
+
 export type PlanningCategory = {
   id?: string;
   category: string;
@@ -77,9 +92,11 @@ export type IncomeEntry = {
 };
 
 export type FinFlowSnapshot = {
+  monthKey: string;
   currentMonth: string;
   closingInfo: string;
   heroMetrics: MonthlyMetric[];
+  cardInvoices: CardInvoice[];
   weeklyLogs: WeeklyLog[];
   fixedExpenses: FixedExpense[];
   accounts: Account[];

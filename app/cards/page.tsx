@@ -14,6 +14,7 @@ import { AccountForm, CardForm, WeeklyLogForm } from "@/components/finflow-forms
 import {
   AccountsList,
   CardPreview,
+  CardInvoicesBoard,
   CardsList,
   FlashNotice,
   FixedExpensesList,
@@ -27,20 +28,21 @@ import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot } from 
 export default async function CardsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error" }>;
+  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error"; month?: string }>;
 }) {
-  const snapshot = await getFinFlowSnapshot();
-  const monthState = await getCurrentMonthLockState();
   const params = await searchParams;
+  const snapshot = await getFinFlowSnapshot(params?.month);
+  const monthState = await getCurrentMonthLockState(snapshot.monthKey);
   const edit = params?.edit;
   const id = params?.id;
+  const monthRoute = `/cards?month=${snapshot.monthKey}`;
 
   const selectedAccount = edit === "account" ? snapshot.accounts.find((item) => item.id === id) : undefined;
   const selectedCard = edit === "card" ? snapshot.cards.find((item) => item.id === id) : undefined;
   const selectedWeeklyLog = edit === "weekly-log" ? snapshot.weeklyLogs.find((item) => item.id === id) : undefined;
 
   return (
-    <AppShell currentPath="/cards" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
+    <AppShell currentPath="/cards" monthKey={snapshot.monthKey} monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
       <PageHead
         title="Accounts & Cards"
         description="Tela principal de contas e cartoes baseada no UI/UX de referencia, agora com persistencia server-side pronta para Vercel."
@@ -59,40 +61,45 @@ export default async function CardsPage({
           <AccountForm
             action={selectedAccount ? updateAccountAction : createAccountAction}
             initialData={selectedAccount}
-            cancelHref={selectedAccount ? "/cards" : undefined}
-            redirectTo="/cards"
+            cancelHref={selectedAccount ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
           <CardForm
             action={selectedCard ? updateCardAction : createCardAction}
             initialData={selectedCard}
-            cancelHref={selectedCard ? "/cards" : undefined}
-            redirectTo="/cards"
+            cancelHref={selectedCard ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
           <WeeklyLogForm
             action={selectedWeeklyLog ? updateWeeklyLogAction : createWeeklyLogAction}
             hasCards={snapshot.cards.length > 0}
             cards={snapshot.cards}
             initialData={selectedWeeklyLog}
-            cancelHref={selectedWeeklyLog ? "/cards" : undefined}
-            redirectTo="/cards"
+            cancelHref={selectedWeeklyLog ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
           <WeeklyLogsList
             weeklyLogs={snapshot.weeklyLogs}
             deleteAction={deleteWeeklyLogAction}
-            editHrefBase="/cards"
+            editHrefBase={monthRoute}
             locked={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
+          <CardInvoicesBoard invoices={snapshot.cardInvoices} />
         </div>
 
         <div className="side-column">
           <CardPreview card={snapshot.cards[0]} />
           <QuickStats stats={snapshot.quickStats.slice(0, 2)} />
-          <AccountsList accounts={snapshot.accounts} deleteAction={deleteAccountAction} editHrefBase="/cards" locked={monthState.isClosed} />
-          <CardsList cards={snapshot.cards} deleteAction={deleteCardAction} editHrefBase="/cards" locked={monthState.isClosed} />
-          <FixedExpensesList fixedExpenses={snapshot.fixedExpenses} locked={monthState.isClosed} />
+          <AccountsList accounts={snapshot.accounts} deleteAction={deleteAccountAction} editHrefBase={monthRoute} locked={monthState.isClosed} monthKey={snapshot.monthKey} />
+          <CardsList cards={snapshot.cards} deleteAction={deleteCardAction} editHrefBase={monthRoute} locked={monthState.isClosed} monthKey={snapshot.monthKey} />
+          <FixedExpensesList fixedExpenses={snapshot.fixedExpenses} locked={monthState.isClosed} monthKey={snapshot.monthKey} />
           <TipPanel
             title="Direcao de UX"
             description={

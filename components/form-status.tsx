@@ -16,8 +16,15 @@ export function SubmitButton({
   const { pending } = useFormStatus();
 
   return (
-    <button className={className} type="submit" disabled={disabled || pending}>
-      {pending ? pendingLabel : idleLabel}
+    <button className={`${className}${pending ? " is-pending" : ""}`} type="submit" disabled={disabled || pending}>
+      {pending ? (
+        <>
+          <span className="button-spinner" aria-hidden="true" />
+          <span>{pendingLabel}</span>
+        </>
+      ) : (
+        idleLabel
+      )}
     </button>
   );
 }

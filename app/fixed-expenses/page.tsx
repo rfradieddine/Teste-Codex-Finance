@@ -11,18 +11,19 @@ import { getCurrentMonthLockState, getFinFlowSnapshot } from "@/lib/repository";
 export default async function FixedExpensesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error" }>;
+  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error"; month?: string }>;
 }) {
-  const snapshot = await getFinFlowSnapshot();
-  const monthState = await getCurrentMonthLockState();
   const params = await searchParams;
+  const snapshot = await getFinFlowSnapshot(params?.month);
+  const monthState = await getCurrentMonthLockState(snapshot.monthKey);
+  const monthRoute = `/fixed-expenses?month=${snapshot.monthKey}`;
   const selectedFixedExpense =
     params?.edit === "fixed-expense"
       ? snapshot.fixedExpenses.find((item) => item.id === params.id)
       : undefined;
 
   return (
-    <AppShell currentPath="/fixed-expenses" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
+    <AppShell currentPath="/fixed-expenses" monthKey={snapshot.monthKey} monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
       <PageHead
         title="Gastos Fixos"
         description="Modulo focado em recorrencias mensais e anuais, preparado para marcar ocorrencia e projetar o impacto no saldo."
@@ -41,15 +42,17 @@ export default async function FixedExpensesPage({
           <FixedExpenseForm
             action={selectedFixedExpense ? updateFixedExpenseAction : createFixedExpenseAction}
             initialData={selectedFixedExpense}
-            cancelHref={selectedFixedExpense ? "/fixed-expenses" : undefined}
-            redirectTo="/fixed-expenses"
+            cancelHref={selectedFixedExpense ? monthRoute : undefined}
+            redirectTo={monthRoute}
             disabled={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
           <FixedExpensesList
             fixedExpenses={snapshot.fixedExpenses}
             deleteAction={deleteFixedExpenseAction}
-            editHrefBase="/fixed-expenses"
+            editHrefBase={monthRoute}
             locked={monthState.isClosed}
+            monthKey={snapshot.monthKey}
           />
         </div>
 

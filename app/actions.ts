@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { bootstrapSql, getDbClient } from "@/lib/db";
+import { getCurrentMonthKey, normalizeMonthKey, shiftMonthKey } from "@/lib/months";
 
 export async function createAccountAction(formData: FormData) {
   const sql = await getDbClient();
@@ -161,10 +162,10 @@ export async function createWeeklyLogAction(formData: FormData) {
     }
 
     await sql`
-      insert into weekly_card_logs (card_id, month_key, week_label, cumulative_amount)
+        insert into weekly_card_logs (card_id, month_key, week_label, cumulative_amount)
       values (
         ${cardId},
-        ${currentMonthKey()},
+        ${getFormMonthKey(formData)},
         ${String(formData.get("week_label") ?? "").trim()},
         ${parseMoney(formData.get("cumulative_amount"))}
       )
@@ -310,12 +311,12 @@ export async function createPlanningAction(formData: FormData) {
     await sql.unsafe(bootstrapSql);
     await assertCurrentMonthOpen(sql, formData);
     await sql`
-      insert into planning_budgets (category, planned_amount, actual_amount, month_key)
+        insert into planning_budgets (category, planned_amount, actual_amount, month_key)
       values (
         ${String(formData.get("category") ?? "").trim()},
         ${parseMoney(formData.get("planned_amount"))},
         ${parseMoney(formData.get("actual_amount"))},
-        ${currentMonthKey()}
+        ${getFormMonthKey(formData)}
       )
     `;
   } finally {
@@ -387,7 +388,7 @@ export async function createIncomeAction(formData: FormData) {
         values (
           ${String(formData.get("name") ?? "").trim()},
           ${parseMoney(formData.get("amount"))},
-          ${currentMonthKey()},
+          ${getFormMonthKey(formData)},
           'one_time',
           ${String(formData.get("starts_on") ?? "").trim() || new Date().toISOString().slice(0, 10)}
         )
@@ -478,17 +479,17 @@ export async function deleteIncomeAction(formData: FormData) {
   redirectWithMessage(formData, "Receita removida.");
 }
 
-export async function copyPlanningToNextMonthAction() {
+export async function copyPlanningToNextMonthAction(formData?: FormData) {
   const sql = await getDbClient();
   if (!sql) {
     redirect("/planning?flash=Banco%20indisponivel&tone=error");
   }
+  const currentMonth = getFormMonthKey(formData);
 
   try {
     await sql.unsafe(bootstrapSql);
 
-    const currentMonth = currentMonthKey();
-    const nextMonth = nextMonthKey(currentMonth);
+    const nextMonth = shiftMonthKey(currentMonth, 1);
 
     await sql`
       insert into planning_budgets (category, planned_amount, actual_amount, month_key)
@@ -507,16 +508,16 @@ export async function copyPlanningToNextMonthAction() {
   }
 
   revalidatePath("/planning");
-  redirect("/planning?flash=Planejamento%20copiado%20para%20o%20proximo%20mes&tone=success");
+  redirect(`/planning?month=${currentMonth}&flash=Planejamento%20copiado%20para%20o%20proximo%20mes&tone=success`);
 }
 
-export async function closeCurrentMonthAction() {
+export async function closeCurrentMonthAction(formData?: FormData) {
   const sql = await getDbClient();
   if (!sql) {
     redirect("/dashboard?flash=Banco%20indisponivel&tone=error");
   }
 
-  const monthKey = currentMonthKey();
+  const monthKey = getFormMonthKey(formData);
 
   try {
     await sql.unsafe(bootstrapSql);
@@ -525,7 +526,7 @@ export async function closeCurrentMonthAction() {
     `;
 
     if (existingSnapshot[0]?.closed_at) {
-      redirect("/dashboard?flash=Este%20mes%20ja%20esta%20fechado&tone=error");
+      redirect(`${getRedirectBase(formData)}?flash=Este%20mes%20ja%20esta%20fechado&tone=error`);
     }
 
     const [accounts, weeklyLogs, fixedExpenses, recurringIncome, oneTimeIncome] = await Promise.all([
@@ -589,16 +590,16 @@ export async function closeCurrentMonthAction() {
 
   revalidatePath("/dashboard");
   revalidatePath("/settings");
-  redirect("/dashboard?flash=Mes%20fechado%20com%20sucesso&tone=success");
+  redirect(`${getRedirectBase(formData)}?flash=Mes%20fechado%20com%20sucesso&tone=success`);
 }
 
-export async function reopenCurrentMonthAction() {
+export async function reopenCurrentMonthAction(formData?: FormData) {
   const sql = await getDbClient();
   if (!sql) {
     redirect("/dashboard?flash=Banco%20indisponivel&tone=error");
   }
 
-  const monthKey = currentMonthKey();
+  const monthKey = getFormMonthKey(formData);
 
   try {
     await sql.unsafe(bootstrapSql);
@@ -608,7 +609,7 @@ export async function reopenCurrentMonthAction() {
     `;
 
     if (!existingSnapshot[0]?.closed_at) {
-      redirect("/dashboard?flash=Este%20mes%20ja%20esta%20aberto&tone=error");
+      redirect(`${getRedirectBase(formData)}?flash=Este%20mes%20ja%20esta%20aberto&tone=error`);
     }
 
     await sql`
@@ -625,7 +626,7 @@ export async function reopenCurrentMonthAction() {
   revalidatePath("/cards");
   revalidatePath("/fixed-expenses");
   revalidatePath("/planning");
-  redirect("/dashboard?flash=Mes%20reaberto%20com%20sucesso&tone=success");
+  redirect(`${getRedirectBase(formData)}?flash=Mes%20reaberto%20com%20sucesso&tone=success`);
 }
 
 function parseMoney(value: FormDataEntryValue | null) {
@@ -645,20 +646,6 @@ function parseDay(value: FormDataEntryValue | null) {
 function nullableString(value: FormDataEntryValue | null) {
   const normalized = String(value ?? "").trim();
   return normalized.length > 0 ? normalized : null;
-}
-
-function currentMonthKey() {
-  const now = new Date();
-  const month = `${now.getUTCMonth() + 1}`.padStart(2, "0");
-  return `${now.getUTCFullYear()}-${month}`;
-}
-
-function nextMonthKey(monthKey: string) {
-  const [year, month] = monthKey.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, 1));
-  date.setUTCMonth(date.getUTCMonth() + 1);
-  const nextMonth = `${date.getUTCMonth() + 1}`.padStart(2, "0");
-  return `${date.getUTCFullYear()}-${nextMonth}`;
 }
 
 function isRecurringActiveInMonth(
@@ -701,7 +688,7 @@ async function assertCurrentMonthOpen(
   sql: NonNullable<Awaited<ReturnType<typeof getDbClient>>>,
   formData: FormData,
 ) {
-  const monthKey = currentMonthKey();
+  const monthKey = getFormMonthKey(formData);
   const rows = await sql<{ closed_at: string | null }[]>`
     select closed_at::text from monthly_snapshots where month_key = ${monthKey} limit 1
   `;
@@ -709,4 +696,18 @@ async function assertCurrentMonthOpen(
   if (rows[0]?.closed_at) {
     redirectWithMessage(formData, `Mes ${monthKey} esta fechado. Reabra o mes para editar os dados.`, "error");
   }
+}
+
+function getFormMonthKey(formData?: FormData) {
+  return normalizeMonthKey(String(formData?.get("month_key") ?? getCurrentMonthKey()));
+}
+
+function getRedirectBase(formData?: FormData) {
+  const redirectTo = String(formData?.get("redirect_to") ?? "").trim();
+  if (redirectTo) {
+    return redirectTo;
+  }
+
+  const monthKey = getFormMonthKey(formData);
+  return `/dashboard?month=${monthKey}`;
 }

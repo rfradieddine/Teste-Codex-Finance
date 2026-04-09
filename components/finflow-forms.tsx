@@ -12,6 +12,7 @@ export function AccountForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   initialData?: {
@@ -22,6 +23,7 @@ export function AccountForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -54,6 +56,7 @@ export function AccountForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
@@ -78,6 +81,7 @@ export function CardForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   initialData?: {
@@ -89,6 +93,7 @@ export function CardForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -134,6 +139,7 @@ export function CardForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
@@ -160,6 +166,7 @@ export function WeeklyLogForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   hasCards: boolean;
@@ -172,6 +179,7 @@ export function WeeklyLogForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel">
@@ -209,6 +217,7 @@ export function WeeklyLogForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
@@ -241,6 +250,7 @@ export function FixedExpenseForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   initialData?: {
@@ -254,6 +264,7 @@ export function FixedExpenseForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -299,6 +310,7 @@ export function FixedExpenseForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/fixed-expenses"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
@@ -323,6 +335,7 @@ export function PlanningForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   initialData?: {
@@ -333,6 +346,7 @@ export function PlanningForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -363,6 +377,7 @@ export function PlanningForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
@@ -387,6 +402,7 @@ export function IncomeForm({
   cancelHref,
   redirectTo,
   disabled,
+  monthKey,
 }: {
   action: ActionFn;
   initialData?: {
@@ -399,6 +415,7 @@ export function IncomeForm({
   };
   redirectTo?: string;
   disabled?: boolean;
+  monthKey: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -444,6 +461,7 @@ export function IncomeForm({
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
+      <input type="hidden" name="month_key" value={monthKey} />
 
       <div className="form-actions">
         <SubmitButton
