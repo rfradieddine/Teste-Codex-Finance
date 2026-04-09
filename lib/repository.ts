@@ -113,6 +113,8 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
     const totalFixed = filteredFixed.reduce((sum, item) => sum + Number(item.amount), 0);
     const totalIncome = incomes.reduce((sum, item) => sum + parseFloat(item.amountInput ?? "0"), 0);
     const availableBalance = totalAccounts + totalIncome - totalCardSpent - totalFixed;
+    const currentMonthLabel = formatMonthHeading(monthKey);
+    const closingInfo = getClosingInfo(cards);
 
     await sql`
       insert into monthly_snapshots (
@@ -158,10 +160,12 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
             value: formatCurrency(item.available_balance),
             detail: item.closed_at ? "Fechado" : index === arr.length - 1 ? "Atual" : "Historico",
           }))
-      : mockSnapshot.monthlyComparison;
+      : buildEmptyMonthlyComparison(monthKey);
 
     return {
       ...mockSnapshot,
+      currentMonth: currentMonthLabel,
+      closingInfo,
       heroMetrics: [
         {
           label: "Saldo disponivel",
@@ -200,72 +204,62 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
           detail: `${incomes.length} entrada(s) no mes`,
         },
       ],
-      accounts: accounts.length
-        ? accounts.map((account) => ({
-            id: account.id,
-            name: account.name,
-            meta: account.bank ?? "Conta conectada",
-            amount: formatCurrency(account.balance),
-            status: account.status,
-            bank: account.bank ?? "",
-            balanceInput: String(account.balance),
-          }))
-        : mockSnapshot.accounts,
-      cards: cards.length
-        ? cards.map((card) => ({
-            id: card.id,
-            nickname: card.nickname,
-            limit: formatCurrency(card.credit_limit),
-            closingDay: card.closing_day,
-            dueDay: card.due_day,
-            usedAmount: formatCurrency(totalCardSpent),
-            status: totalLimit > 0 ? `${Math.round((totalCardSpent / totalLimit) * 100)}% usado` : "Novo",
-            creditLimitInput: String(card.credit_limit),
-          }))
-        : mockSnapshot.cards,
-      fixedExpenses: filteredFixed.length
-        ? filteredFixed.map((item, index) => ({
-            id: item.id,
-            title: item.name,
-            due: `Inicio ${item.starts_on}`,
-            amount: formatCurrency(item.amount),
-            tone: index % 3 === 0 ? "primary" : index % 3 === 1 ? "secondary" : "neutral",
-            status: "Ativo",
-            category: item.category,
-            paymentMethod: item.payment_method,
-            startsOn: item.starts_on,
-            recurringType: item.recurring_type,
-            amountInput: String(item.amount),
-          }))
-        : mockSnapshot.fixedExpenses,
-      weeklyLogs: weeklyLogs.length
-        ? weeklyLogs.map((log, index, arr) => {
-            const prev = index === 0 ? 0 : Number(arr[index - 1].cumulative_amount);
-            const current = Number(log.cumulative_amount);
-            const diff = current - prev;
+      accounts: accounts.map((account) => ({
+        id: account.id,
+        name: account.name,
+        meta: account.bank ?? "Conta conectada",
+        amount: formatCurrency(account.balance),
+        status: account.status,
+        bank: account.bank ?? "",
+        balanceInput: String(account.balance),
+      })),
+      cards: cards.map((card) => ({
+        id: card.id,
+        nickname: card.nickname,
+        limit: formatCurrency(card.credit_limit),
+        closingDay: card.closing_day,
+        dueDay: card.due_day,
+        usedAmount: formatCurrency(totalCardSpent),
+        status: totalLimit > 0 ? `${Math.round((totalCardSpent / totalLimit) * 100)}% usado` : "Novo",
+        creditLimitInput: String(card.credit_limit),
+      })),
+      fixedExpenses: filteredFixed.map((item, index) => ({
+        id: item.id,
+        title: item.name,
+        due: `Inicio ${item.starts_on}`,
+        amount: formatCurrency(item.amount),
+        tone: index % 3 === 0 ? "primary" : index % 3 === 1 ? "secondary" : "neutral",
+        status: "Ativo",
+        category: item.category,
+        paymentMethod: item.payment_method,
+        startsOn: item.starts_on,
+        recurringType: item.recurring_type,
+        amountInput: String(item.amount),
+      })),
+      weeklyLogs: weeklyLogs.map((log, index, arr) => {
+        const prev = index === 0 ? 0 : Number(arr[index - 1].cumulative_amount);
+        const current = Number(log.cumulative_amount);
+        const diff = current - prev;
 
-            return {
-              id: log.id,
-              cardId: log.card_id,
-              week: log.week_label,
-              amount: formatCurrency(log.cumulative_amount),
-              trend: `${diff >= 0 ? "+" : ""}${formatCurrency(diff)}`,
-              amountInput: String(log.cumulative_amount),
-            };
-          })
-        : mockSnapshot.weeklyLogs,
-      planning: planning.length
-        ? planning.map((item) => ({
-            id: item.id,
-            category: item.category,
-            planned: formatCurrency(item.planned_amount),
-            actual: formatCurrency(item.actual_amount),
-            status: Number(item.actual_amount) > Number(item.planned_amount) ? "Acima" : "Dentro",
-            plannedInput: String(item.planned_amount),
-            actualInput: String(item.actual_amount),
-          }))
-        : mockSnapshot.planning,
-      incomes: incomes.length ? incomes : mockSnapshot.incomes,
+        return {
+          id: log.id,
+          cardId: log.card_id,
+          week: log.week_label,
+          amount: formatCurrency(log.cumulative_amount),
+          trend: `${diff >= 0 ? "+" : ""}${formatCurrency(diff)}`,
+          amountInput: String(log.cumulative_amount),
+        };
+      }),
+      planning: planning.map((item) => ({
+        id: item.id,
+        category: item.category,
+        planned: formatCurrency(item.planned_amount),
+        actual: formatCurrency(item.actual_amount),
+        status: Number(item.actual_amount) > Number(item.planned_amount) ? "Acima" : "Dentro",
+        plannedInput: String(item.planned_amount),
+        actualInput: String(item.actual_amount),
+      })),
+      incomes,
       monthlyComparison,
     };
   } catch {
@@ -277,7 +271,7 @@ export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
 
 export function getDatabaseStatus() {
   return process.env.DATABASE_URL
-    ? "DATABASE_URL configurada: pronto para conectar o Postgres na Vercel."
+    ? "Banco ativo: usando Postgres real via DATABASE_URL."
     : "Modo demo: usando dados locais ate configurar DATABASE_URL.";
 }
 
@@ -364,4 +358,46 @@ function formatDateTime(value: string) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatMonthHeading(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+function getClosingInfo(cards: { due_day: number }[]) {
+  if (cards.length === 0) {
+    return "Nenhum cartao com vencimento cadastrado";
+  }
+
+  const nearestDueDay = Math.min(...cards.map((card) => card.due_day));
+  return `Proximo vencimento no dia ${String(nearestDueDay).padStart(2, "0")}`;
+}
+
+function buildEmptyMonthlyComparison(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const items = [];
+
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const date = new Date(Date.UTC(year, month - 1, 1));
+    date.setUTCMonth(date.getUTCMonth() - offset);
+
+    items.push({
+      label: date
+        .toLocaleString("pt-BR", {
+          month: "short",
+          timeZone: "UTC",
+        })
+        .replace(".", "")
+        .replace(/^\w/, (char) => char.toUpperCase()),
+      value: formatCurrency(0),
+      detail: offset === 0 ? "Atual" : "Sem dados",
+    });
+  }
+
+  return items;
 }

@@ -22,7 +22,7 @@ import {
   TipPanel,
   WeeklyLogsList,
 } from "@/components/finflow-sections";
-import { getFinFlowSnapshot } from "@/lib/repository";
+import { getDatabaseStatus, getFinFlowSnapshot } from "@/lib/repository";
 
 export default async function CardsPage({
   searchParams,
@@ -92,11 +92,7 @@ export default async function CardsPage({
       <footer className="footer-actions">
         <TipPanel
           title="Modo atual"
-          description={
-            snapshot.cards[0]?.id?.startsWith("card-")
-              ? "Sem banco configurado: a tela continua operando com dados demo."
-              : "Banco ativo: mudancas aplicadas via server actions."
-          }
+          description={getDatabaseStatus()}
         />
       </footer>
     </AppShell>
