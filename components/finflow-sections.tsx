@@ -1,5 +1,16 @@
 import Link from "next/link";
-import type { Account, Card, CardInvoice, FinFlowSnapshot, FixedExpense, IncomeEntry, MonthlyMetric, PlanningCategory, WeeklyLog } from "@/lib/types";
+import type {
+  Account,
+  Card,
+  CardInvoice,
+  FinFlowSnapshot,
+  FixedExpense,
+  IncomeEntry,
+  MonthlyCategorySummaryRow,
+  MonthlyMetric,
+  PlanningCategory,
+  WeeklyLog,
+} from "@/lib/types";
 
 type ActionFn = (formData: FormData) => Promise<void>;
 
@@ -625,10 +636,51 @@ export function CardInvoicesBoard({ invoices }: { invoices: CardInvoice[] }) {
   );
 }
 
+export function MonthlyCategorySummaryTable({
+  rows,
+  monthLabel,
+}: {
+  rows: MonthlyCategorySummaryRow[];
+  monthLabel: string;
+}) {
+  return (
+    <section className="panel">
+      <div className="section-header">
+        <div>
+          <h2>Resumo mensal por categoria</h2>
+          <p>Leitura consolidada do mes em formato mais proximo da planilha.</p>
+        </div>
+        <span className="summary-pill">{monthLabel}</span>
+      </div>
+
+      <div className="summary-table">
+        {rows.length === 0 ? (
+          <EmptyState
+            title="Nenhum resumo disponivel"
+            description="Cadastre receitas, gastos fixos e cartoes para montar o consolidado mensal."
+          />
+        ) : null}
+        {rows.map((row) => (
+          <article className="summary-row" key={`${row.type}-${row.label}`}>
+            <div>
+              <strong>{row.label}</strong>
+              <span>{row.detail}</span>
+            </div>
+            <div className="summary-values">
+              <strong className={`summary-value summary-value-${row.type}`}>{row.amount}</strong>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function DashboardOverview({ snapshot }: { snapshot: FinFlowSnapshot }) {
   return (
     <div className="dashboard-grid">
       <div className="main-column">
+        <MonthlyCategorySummaryTable rows={snapshot.monthlyCategorySummary} monthLabel={snapshot.currentMonth} />
         <ComparisonBars comparison={snapshot.monthlyComparison} />
         <CardInvoicesBoard invoices={snapshot.cardInvoices} />
         <WeeklyLogsList weeklyLogs={snapshot.weeklyLogs} />

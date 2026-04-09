@@ -50,6 +50,16 @@ export const mockSnapshot: FinFlowSnapshot = {
       utilization: "18% do limite",
     },
   ],
+  monthlyCategorySummary: [
+    { label: "Salario", amount: "R$ 9.800", type: "income", detail: "Receita recorrente" },
+    { label: "Freela", amount: "R$ 2.380", type: "income", detail: "Receita pontual" },
+    { label: "Moradia", amount: "R$ 2.300", type: "expense", detail: "Gastos fixos" },
+    { label: "Contas", amount: "R$ 189", type: "expense", detail: "Gastos fixos" },
+    { label: "Assinaturas", amount: "R$ 96", type: "expense", detail: "Gastos fixos" },
+    { label: "Cartao Ultravioleta", amount: "R$ 3.090,00", type: "expense", detail: "Fatura do mes" },
+    { label: "Total de gastos", amount: "R$ 5.675,00", type: "total", detail: "Fixos + cartoes" },
+    { label: "Saldo restante", amount: "R$ 8.762", type: "balance", detail: "Receitas - gastos + contas" },
+  ],
   quickStats: [
     { label: "Total em contas", value: "R$ 142k", detail: "+4,2% no mes", tone: "primary" },
     { label: "Uso do limite", value: "12%", detail: "Saudavel", tone: "secondary" },

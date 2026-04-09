@@ -70,6 +70,13 @@ export type CardInvoice = {
   isProjected?: boolean;
 };
 
+export type MonthlyCategorySummaryRow = {
+  label: string;
+  amount: string;
+  type: "income" | "expense" | "total" | "balance";
+  detail: string;
+};
+
 export type PlanningCategory = {
   id?: string;
   category: string;
@@ -97,6 +104,7 @@ export type FinFlowSnapshot = {
   closingInfo: string;
   heroMetrics: MonthlyMetric[];
   cardInvoices: CardInvoice[];
+  monthlyCategorySummary: MonthlyCategorySummaryRow[];
   weeklyLogs: WeeklyLog[];
   fixedExpenses: FixedExpense[];
   accounts: Account[];

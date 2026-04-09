@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { bootstrapSql, getDbClient } from "@/lib/db";
 import { mockSnapshot } from "@/lib/mock-data";
 import { getCurrentMonthKey, normalizeMonthKey, shiftMonthKey } from "@/lib/months";
-import type { CardInvoice, FinFlowSnapshot, IncomeEntry, MonthLockState } from "@/lib/types";
+import type { CardInvoice, FinFlowSnapshot, IncomeEntry, MonthLockState, MonthlyCategorySummaryRow } from "@/lib/types";
 
 export async function getFinFlowSnapshot(requestedMonthKey?: string): Promise<FinFlowSnapshot> {
   noStore();
@@ -166,6 +166,13 @@ export async function getFinFlowSnapshot(requestedMonthKey?: string): Promise<Fi
     }[]>`select month_key, available_balance::text, closed_at::text from monthly_snapshots order by month_key desc limit 24`;
 
     const monthlyComparison = buildMonthlyComparison(monthKey, monthlySnapshots);
+    const monthlyCategorySummary = buildMonthlyCategorySummary({
+      incomes,
+      fixedExpenses: filteredFixed,
+      cardInvoices,
+      selectedMonthKey: monthKey,
+      availableBalance,
+    });
 
     return {
       ...mockSnapshot,
@@ -187,6 +194,7 @@ export async function getFinFlowSnapshot(requestedMonthKey?: string): Promise<Fi
         },
       ],
       cardInvoices,
+      monthlyCategorySummary,
       quickStats: [
         {
           label: "Total em contas",
@@ -501,4 +509,80 @@ function formatShortMonthYear(monthKey: string) {
     .format(new Date(Date.UTC(year, month - 1, 1)))
     .replace(".", "")
     .replace(/^\w/, (char) => char.toUpperCase());
+}
+
+function buildMonthlyCategorySummary({
+  incomes,
+  fixedExpenses,
+  cardInvoices,
+  selectedMonthKey,
+  availableBalance,
+}: {
+  incomes: IncomeEntry[];
+  fixedExpenses: {
+    category: string;
+    amount: string;
+  }[];
+  cardInvoices: CardInvoice[];
+  selectedMonthKey: string;
+  availableBalance: number;
+}): MonthlyCategorySummaryRow[] {
+  const incomeRows: MonthlyCategorySummaryRow[] = incomes.map((income) => ({
+    label: income.name,
+    amount: income.amount,
+    type: "income",
+    detail: income.type === "recurring" ? "Receita recorrente" : "Receita pontual",
+  }));
+
+  const fixedByCategory = new Map<string, number>();
+  for (const item of fixedExpenses) {
+    fixedByCategory.set(item.category, (fixedByCategory.get(item.category) ?? 0) + Number(item.amount));
+  }
+
+  const fixedRows: MonthlyCategorySummaryRow[] = Array.from(fixedByCategory.entries()).map(([category, total]) => ({
+    label: category,
+    amount: formatCurrency(total),
+    type: "expense",
+    detail: "Gastos fixos",
+  }));
+
+  const currentInvoices = cardInvoices
+    .filter((invoice) => invoice.monthKey === selectedMonthKey)
+    .map((invoice) => ({
+      label: `Cartao ${invoice.cardName}`,
+      amount: invoice.amount,
+      type: "expense" as const,
+      detail: "Fatura do mes",
+    }));
+
+  const totalExpenses =
+    fixedRows.reduce((sum, item) => sum + parseCurrencyString(item.amount), 0) +
+    currentInvoices.reduce((sum, item) => sum + parseCurrencyString(item.amount), 0);
+
+  return [
+    ...incomeRows,
+    ...fixedRows,
+    ...currentInvoices,
+    {
+      label: "Total de gastos",
+      amount: formatCurrency(totalExpenses),
+      type: "total",
+      detail: "Fixos + cartoes",
+    },
+    {
+      label: "Saldo restante",
+      amount: formatCurrency(availableBalance),
+      type: "balance",
+      detail: "Receitas - gastos + contas",
+    },
+  ];
+}
+
+function parseCurrencyString(value: string) {
+  return Number(
+    value
+      .replace(/[^\d,.-]/g, "")
+      .replace(/\./g, "")
+      .replace(",", "."),
+  );
 }
