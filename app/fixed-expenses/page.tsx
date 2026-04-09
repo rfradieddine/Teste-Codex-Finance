@@ -5,13 +5,13 @@ import {
 } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { FixedExpenseForm } from "@/components/finflow-forms";
-import { FixedExpensesList, PageHead, QuickStats, TipPanel } from "@/components/finflow-sections";
+import { FixedExpensesList, FlashNotice, PageHead, QuickStats, TipPanel } from "@/components/finflow-sections";
 import { getFinFlowSnapshot } from "@/lib/repository";
 
 export default async function FixedExpensesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string }>;
+  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error" }>;
 }) {
   const snapshot = await getFinFlowSnapshot();
   const params = await searchParams;
@@ -27,6 +27,7 @@ export default async function FixedExpensesPage({
         description="Modulo focado em recorrencias mensais e anuais, preparado para marcar ocorrencia e projetar o impacto no saldo."
         metrics={snapshot.quickStats.slice(2, 4)}
       />
+      <FlashNotice message={params?.flash} tone={params?.tone} />
 
       <div className="dashboard-grid">
         <div className="main-column">
@@ -34,6 +35,7 @@ export default async function FixedExpensesPage({
             action={selectedFixedExpense ? updateFixedExpenseAction : createFixedExpenseAction}
             initialData={selectedFixedExpense}
             cancelHref={selectedFixedExpense ? "/fixed-expenses" : undefined}
+            redirectTo="/fixed-expenses"
           />
           <FixedExpensesList
             fixedExpenses={snapshot.fixedExpenses}

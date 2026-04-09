@@ -9,13 +9,13 @@ import {
 } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { IncomeForm, PlanningForm } from "@/components/finflow-forms";
-import { IncomesList, PageHead, PlanningList, QuickStats, TipPanel } from "@/components/finflow-sections";
+import { FlashNotice, IncomesList, PageHead, PlanningList, QuickStats, TipPanel } from "@/components/finflow-sections";
 import { getFinFlowSnapshot } from "@/lib/repository";
 
 export default async function PlanningPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string; incomeType?: "recurring" | "one_time" }>;
+  searchParams?: Promise<{ edit?: string; id?: string; incomeType?: "recurring" | "one_time"; flash?: string; tone?: "success" | "error" }>;
 }) {
   const snapshot = await getFinFlowSnapshot();
   const params = await searchParams;
@@ -33,6 +33,7 @@ export default async function PlanningPage({
         description="Modulo para orcamento por categoria com comparacao entre planejado e realizado, agora com receitas persistidas."
         metrics={snapshot.heroMetrics}
       />
+      <FlashNotice message={params?.flash} tone={params?.tone} />
 
       <div className="dashboard-grid">
         <div className="main-column">
@@ -40,6 +41,7 @@ export default async function PlanningPage({
             action={selectedPlanning ? updatePlanningAction : createPlanningAction}
             initialData={selectedPlanning}
             cancelHref={selectedPlanning ? "/planning" : undefined}
+            redirectTo="/planning"
           />
           <section className="panel compact-panel">
             <div className="section-header">
@@ -66,6 +68,7 @@ export default async function PlanningPage({
             action={selectedIncome ? updateIncomeAction : createIncomeAction}
             initialData={selectedIncome}
             cancelHref={selectedIncome ? "/planning" : undefined}
+            redirectTo="/planning"
           />
           <IncomesList incomes={snapshot.incomes} deleteAction={deleteIncomeAction} editHrefBase="/planning" />
           <QuickStats stats={snapshot.quickStats} />

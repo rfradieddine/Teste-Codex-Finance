@@ -15,6 +15,7 @@ import {
   AccountsList,
   CardPreview,
   CardsList,
+  FlashNotice,
   FixedExpensesList,
   PageHead,
   QuickStats,
@@ -26,7 +27,7 @@ import { getFinFlowSnapshot } from "@/lib/repository";
 export default async function CardsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ edit?: string; id?: string }>;
+  searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error" }>;
 }) {
   const snapshot = await getFinFlowSnapshot();
   const params = await searchParams;
@@ -44,6 +45,7 @@ export default async function CardsPage({
         description="Tela principal de contas e cartoes baseada no UI/UX de referencia, agora com persistencia server-side pronta para Vercel."
         metrics={snapshot.heroMetrics}
       />
+      <FlashNotice message={params?.flash} tone={params?.tone} />
 
       <div className="dashboard-grid">
         <div className="main-column">
@@ -51,11 +53,13 @@ export default async function CardsPage({
             action={selectedAccount ? updateAccountAction : createAccountAction}
             initialData={selectedAccount}
             cancelHref={selectedAccount ? "/cards" : undefined}
+            redirectTo="/cards"
           />
           <CardForm
             action={selectedCard ? updateCardAction : createCardAction}
             initialData={selectedCard}
             cancelHref={selectedCard ? "/cards" : undefined}
+            redirectTo="/cards"
           />
           <WeeklyLogForm
             action={selectedWeeklyLog ? updateWeeklyLogAction : createWeeklyLogAction}
@@ -63,6 +67,7 @@ export default async function CardsPage({
             cards={snapshot.cards}
             initialData={selectedWeeklyLog}
             cancelHref={selectedWeeklyLog ? "/cards" : undefined}
+            redirectTo="/cards"
           />
           <WeeklyLogsList
             weeklyLogs={snapshot.weeklyLogs}

@@ -1,3 +1,5 @@
+import { SubmitButton } from "@/components/form-status";
+
 type ActionFn = (formData: FormData) => Promise<void>;
 
 type CancelProps = {
@@ -8,6 +10,7 @@ export function AccountForm({
   action,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   initialData?: {
@@ -16,6 +19,7 @@ export function AccountForm({
     bank?: string;
     balanceInput?: string;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -45,11 +49,14 @@ export function AccountForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit">
-          {initialData?.id ? "Atualizar conta" : "Vincular nova conta"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={initialData?.id ? "Atualizar conta" : "Vincular nova conta"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao
@@ -64,6 +71,7 @@ export function CardForm({
   action,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   initialData?: {
@@ -73,6 +81,7 @@ export function CardForm({
     closingDay?: number;
     dueDay?: number;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -115,11 +124,14 @@ export function CardForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit">
-          {initialData?.id ? "Atualizar cartao" : "Salvar cartao"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={initialData?.id ? "Atualizar cartao" : "Salvar cartao"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao
@@ -136,6 +148,7 @@ export function WeeklyLogForm({
   cards,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   hasCards: boolean;
@@ -146,6 +159,7 @@ export function WeeklyLogForm({
     week?: string;
     amountInput?: string;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel">
@@ -180,11 +194,15 @@ export function WeeklyLogForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit" disabled={!hasCards}>
-          {hasCards ? (initialData?.id ? "Atualizar lancamento" : "Salvar lancamento") : "Cadastre um cartao primeiro"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={hasCards ? (initialData?.id ? "Atualizar lancamento" : "Salvar lancamento") : "Cadastre um cartao primeiro"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={!hasCards}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao
@@ -199,6 +217,7 @@ export function FixedExpenseForm({
   action,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   initialData?: {
@@ -210,6 +229,7 @@ export function FixedExpenseForm({
     startsOn?: string;
     recurringType?: string;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -252,11 +272,14 @@ export function FixedExpenseForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/fixed-expenses"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit">
-          {initialData?.id ? "Atualizar gasto fixo" : "Salvar gasto fixo"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={initialData?.id ? "Atualizar gasto fixo" : "Salvar gasto fixo"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao
@@ -271,6 +294,7 @@ export function PlanningForm({
   action,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   initialData?: {
@@ -279,6 +303,7 @@ export function PlanningForm({
     plannedInput?: string;
     actualInput?: string;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -306,11 +331,14 @@ export function PlanningForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit">
-          {initialData?.id ? "Atualizar planejamento" : "Salvar planejamento"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={initialData?.id ? "Atualizar planejamento" : "Salvar planejamento"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao
@@ -325,6 +353,7 @@ export function IncomeForm({
   action,
   initialData,
   cancelHref,
+  redirectTo,
 }: {
   action: ActionFn;
   initialData?: {
@@ -335,6 +364,7 @@ export function IncomeForm({
     frequency?: "monthly" | "yearly" | "one_time";
     startsOn?: string;
   };
+  redirectTo?: string;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -377,11 +407,14 @@ export function IncomeForm({
       </div>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
+      <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
 
       <div className="form-actions">
-        <button className="ghost-button" type="submit">
-          {initialData?.id ? "Atualizar receita" : "Salvar receita"}
-        </button>
+        <SubmitButton
+          className="ghost-button"
+          idleLabel={initialData?.id ? "Atualizar receita" : "Salvar receita"}
+          pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+        />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
             Cancelar edicao

@@ -3,6 +3,35 @@ import type { Account, Card, FinFlowSnapshot, FixedExpense, IncomeEntry, Monthly
 
 type ActionFn = (formData: FormData) => Promise<void>;
 
+export function FlashNotice({
+  message,
+  tone = "success",
+}: {
+  message?: string;
+  tone?: "success" | "error";
+}) {
+  if (!message) {
+    return null;
+  }
+
+  return <div className={tone === "error" ? "flash-notice flash-notice-error" : "flash-notice"}>{message}</div>;
+}
+
+export function EmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="empty-state">
+      <strong>{title}</strong>
+      <p>{description}</p>
+    </div>
+  );
+}
+
 export function PageHead({
   title,
   description,
@@ -98,6 +127,12 @@ export function AccountsList({
       </div>
 
       <div className="account-list">
+        {accounts.length === 0 ? (
+          <EmptyState
+            title="Nenhuma conta cadastrada"
+            description="Adicione sua primeira conta para acompanhar saldo e compor o dashboard."
+          />
+        ) : null}
         {accounts.map((account, index) => (
           <article className="account-row" key={account.id ?? account.name}>
             <div className={index === 0 ? "account-badge account-badge-primary" : "account-badge account-badge-secondary"}>
@@ -152,6 +187,12 @@ export function CardsList({
       </div>
 
       <div className="account-list">
+        {cards.length === 0 ? (
+          <EmptyState
+            title="Nenhum cartao cadastrado"
+            description="Cadastre um cartao para registrar lancamentos semanais e acompanhar o uso do limite."
+          />
+        ) : null}
         {cards.map((card, index) => (
           <article className="account-row" key={card.id ?? card.nickname}>
             <div className={index === 0 ? "account-badge account-badge-secondary" : "account-badge account-badge-primary"}>
@@ -206,6 +247,12 @@ export function FixedExpensesList({
       </div>
 
       <div className="fixed-list">
+        {fixedExpenses.length === 0 ? (
+          <EmptyState
+            title="Nenhum gasto fixo ativo"
+            description="Cadastre gastos recorrentes para o saldo mensal ficar mais fiel a sua realidade."
+          />
+        ) : null}
         {fixedExpenses.map((item) => (
           <article className="fixed-row" key={item.id ?? item.title}>
             <div className={`fixed-dot fixed-dot-${item.tone}`} />
@@ -261,6 +308,12 @@ export function WeeklyLogsList({
       </div>
 
       <div className="log-list">
+        {weeklyLogs.length === 0 ? (
+          <EmptyState
+            title="Sem lancamentos neste mes"
+            description="Assim que voce registrar o acumulado do cartao, o historico semanal aparece aqui."
+          />
+        ) : null}
         {weeklyLogs.map((item) => (
           <article className="log-row" key={item.id ?? item.week}>
             <div>
@@ -304,6 +357,12 @@ export function PlanningTable({ planning }: { planning: PlanningCategory[] }) {
       </div>
 
       <div className="planning-table">
+        {planning.length === 0 ? (
+          <EmptyState
+            title="Nenhuma categoria planejada"
+            description="Crie um orcamento por categoria para comparar o previsto com o realizado."
+          />
+        ) : null}
         {planning.map((item) => (
           <article className="planning-row" key={item.category}>
             <strong>{item.category}</strong>
@@ -383,6 +442,12 @@ export function IncomesList({
       </div>
 
       <div className="account-list">
+        {incomes.length === 0 ? (
+          <EmptyState
+            title="Nenhuma receita cadastrada"
+            description="Cadastre receitas recorrentes ou pontuais para melhorar o saldo e a projecao do mes."
+          />
+        ) : null}
         {incomes.map((income, index) => (
           <article className="account-row" key={income.id ?? `${income.name}-${index}`}>
             <div className={income.type === "recurring" ? "account-badge account-badge-primary" : "account-badge account-badge-secondary"}>

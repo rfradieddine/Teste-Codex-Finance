@@ -1,10 +1,15 @@
 import { closeCurrentMonthAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
-import { DashboardOverview, PageHead, TipPanel } from "@/components/finflow-sections";
+import { DashboardOverview, FlashNotice, PageHead, TipPanel } from "@/components/finflow-sections";
 import { getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ flash?: string; tone?: "success" | "error" }>;
+}) {
   const snapshot = await getFinFlowSnapshot();
+  const params = await searchParams;
   const closureStatus = await getMonthlyClosureStatus();
 
   return (
@@ -14,6 +19,7 @@ export default async function DashboardPage() {
         description="Painel central do FinFlow com saldo disponivel, comparativo mensal, lancamentos semanais e leitura rapida para celular."
         metrics={snapshot.heroMetrics}
       />
+      <FlashNotice message={params?.flash} tone={params?.tone} />
 
       <DashboardOverview snapshot={snapshot} />
 

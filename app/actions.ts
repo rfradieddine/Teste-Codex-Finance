@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { bootstrapSql, getDbClient } from "@/lib/db";
 
 export async function createAccountAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -26,12 +27,13 @@ export async function createAccountAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Conta salva com sucesso.");
 }
 
 export async function deleteAccountAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -42,12 +44,13 @@ export async function deleteAccountAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Conta removida.");
 }
 
 export async function updateAccountAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -65,12 +68,13 @@ export async function updateAccountAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Conta atualizada com sucesso.");
 }
 
 export async function createCardAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -90,12 +94,13 @@ export async function createCardAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Cartao salvo com sucesso.");
 }
 
 export async function deleteCardAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -106,12 +111,13 @@ export async function deleteCardAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Cartao removido.");
 }
 
 export async function updateCardAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -130,12 +136,13 @@ export async function updateCardAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Cartao atualizado com sucesso.");
 }
 
 export async function createWeeklyLogAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -143,7 +150,7 @@ export async function createWeeklyLogAction(formData: FormData) {
 
     const cardId = String(formData.get("card_id") ?? "");
     if (!cardId) {
-      return;
+      return redirectWithMessage(formData, "Selecione um cartao valido.", "error");
     }
 
     await sql`
@@ -161,12 +168,13 @@ export async function createWeeklyLogAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Lancamento salvo com sucesso.");
 }
 
 export async function deleteWeeklyLogAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -177,12 +185,13 @@ export async function deleteWeeklyLogAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Lancamento removido.");
 }
 
 export async function updateWeeklyLogAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -200,12 +209,13 @@ export async function updateWeeklyLogAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Lancamento atualizado com sucesso.");
 }
 
 export async function createFixedExpenseAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -229,12 +239,13 @@ export async function createFixedExpenseAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/fixed-expenses");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Gasto fixo salvo com sucesso.");
 }
 
 export async function deleteFixedExpenseAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -246,12 +257,13 @@ export async function deleteFixedExpenseAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/fixed-expenses");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Gasto fixo removido.");
 }
 
 export async function updateFixedExpenseAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -273,12 +285,13 @@ export async function updateFixedExpenseAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/fixed-expenses");
   revalidatePath("/cards");
+  redirectWithMessage(formData, "Gasto fixo atualizado com sucesso.");
 }
 
 export async function createPlanningAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -298,12 +311,13 @@ export async function createPlanningAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Planejamento salvo com sucesso.");
 }
 
 export async function updatePlanningAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -321,12 +335,13 @@ export async function updatePlanningAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Planejamento atualizado com sucesso.");
 }
 
 export async function deletePlanningAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -337,12 +352,13 @@ export async function deletePlanningAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Planejamento removido.");
 }
 
 export async function createIncomeAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -378,12 +394,13 @@ export async function createIncomeAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Receita salva com sucesso.");
 }
 
 export async function updateIncomeAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -416,12 +433,13 @@ export async function updateIncomeAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Receita atualizada com sucesso.");
 }
 
 export async function deleteIncomeAction(formData: FormData) {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    return redirectWithMessage(formData, "Nao foi possivel conectar ao banco.", "error");
   }
 
   try {
@@ -439,12 +457,13 @@ export async function deleteIncomeAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/planning");
+  redirectWithMessage(formData, "Receita removida.");
 }
 
 export async function copyPlanningToNextMonthAction() {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    redirect("/planning?flash=Banco%20indisponivel&tone=error");
   }
 
   try {
@@ -470,12 +489,13 @@ export async function copyPlanningToNextMonthAction() {
   }
 
   revalidatePath("/planning");
+  redirect("/planning?flash=Planejamento%20copiado%20para%20o%20proximo%20mes&tone=success");
 }
 
 export async function closeCurrentMonthAction() {
   const sql = await getDbClient();
   if (!sql) {
-    return;
+    redirect("/dashboard?flash=Banco%20indisponivel&tone=error");
   }
 
   const monthKey = currentMonthKey();
@@ -544,6 +564,7 @@ export async function closeCurrentMonthAction() {
 
   revalidatePath("/dashboard");
   revalidatePath("/settings");
+  redirect("/dashboard?flash=Mes%20fechado%20com%20sucesso&tone=success");
 }
 
 function parseMoney(value: FormDataEntryValue | null) {
@@ -604,4 +625,13 @@ function isRecurringActiveInMonth(
   }
 
   return true;
+}
+
+function redirectWithMessage(
+  formData: FormData,
+  message: string,
+  tone: "success" | "error" = "success",
+) {
+  const basePath = String(formData.get("redirect_to") ?? "/dashboard");
+  redirect(`${basePath}?flash=${encodeURIComponent(message)}&tone=${tone}`);
 }

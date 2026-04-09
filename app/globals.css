@@ -290,7 +290,8 @@ svg {
 .page-head p,
 .panel p,
 .section-header p,
-.tip-panel p {
+.tip-panel p,
+.empty-state p {
   color: var(--muted);
 }
 
@@ -729,6 +730,31 @@ svg {
   justify-content: flex-end;
   gap: 1rem;
   padding-top: 2rem;
+}
+
+.flash-notice {
+  margin-bottom: 1.25rem;
+  border-radius: 18px;
+  background: rgba(63, 255, 139, 0.08);
+  color: var(--text);
+  padding: 1rem 1.1rem;
+  box-shadow: inset 0 0 0 1px rgba(63, 255, 139, 0.12);
+}
+
+.flash-notice-error {
+  background: rgba(255, 113, 108, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 113, 108, 0.12);
+}
+
+.empty-state {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+}
+
+.empty-state strong {
+  display: block;
+  margin-bottom: 0.35rem;
 }
 
 .planning-table {
