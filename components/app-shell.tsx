@@ -2,6 +2,7 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 import { navigation } from "@/lib/navigation";
 import { Icon } from "@/components/icons";
+import { logoutAppAction } from "@/app/security-actions";
 
 type AppShellProps = {
   currentPath: string;
@@ -63,9 +64,11 @@ export function AppShell({ currentPath, monthLabel, closingInfo, children }: App
             <button className="icon-button" type="button" aria-label="Notificacoes">
               <Icon name="bell" />
             </button>
-            <button className="icon-button" type="button" aria-label="Perfil">
-              <Icon name="user" />
-            </button>
+            <form action={logoutAppAction}>
+              <button className="icon-button" type="submit" aria-label="Bloquear app">
+                <Icon name="user" />
+              </button>
+            </form>
           </div>
         </header>
 

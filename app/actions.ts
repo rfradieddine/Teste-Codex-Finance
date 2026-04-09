@@ -12,6 +12,7 @@ export async function createAccountAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       insert into accounts (name, bank, balance, status)
       values (
@@ -37,6 +38,7 @@ export async function deleteAccountAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`delete from accounts where id = ${String(formData.get("id") ?? "")}`;
   } finally {
     await sql.end({ timeout: 1 });
@@ -54,6 +56,7 @@ export async function updateAccountAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       update accounts
       set
@@ -79,6 +82,7 @@ export async function createCardAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       insert into cards (nickname, credit_limit, closing_day, due_day)
       values (
@@ -104,6 +108,7 @@ export async function deleteCardAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`delete from cards where id = ${String(formData.get("id") ?? "")}`;
   } finally {
     await sql.end({ timeout: 1 });
@@ -121,6 +126,7 @@ export async function updateCardAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       update cards
       set
@@ -147,6 +153,7 @@ export async function createWeeklyLogAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
 
     const cardId = String(formData.get("card_id") ?? "");
     if (!cardId) {
@@ -178,6 +185,7 @@ export async function deleteWeeklyLogAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`delete from weekly_card_logs where id = ${String(formData.get("id") ?? "")}`;
   } finally {
     await sql.end({ timeout: 1 });
@@ -195,6 +203,7 @@ export async function updateWeeklyLogAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       update weekly_card_logs
       set
@@ -220,6 +229,7 @@ export async function createFixedExpenseAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       insert into fixed_expenses (name, amount, category, payment_method, starts_on, recurring_type, active)
       values (
@@ -249,6 +259,7 @@ export async function deleteFixedExpenseAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`delete from fixed_expenses where id = ${String(formData.get("id") ?? "")}`;
   } finally {
     await sql.end({ timeout: 1 });
@@ -267,6 +278,7 @@ export async function updateFixedExpenseAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       update fixed_expenses
       set
@@ -296,6 +308,7 @@ export async function createPlanningAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       insert into planning_budgets (category, planned_amount, actual_amount, month_key)
       values (
@@ -321,6 +334,7 @@ export async function updatePlanningAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`
       update planning_budgets
       set
@@ -345,6 +359,7 @@ export async function deletePlanningAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     await sql`delete from planning_budgets where id = ${String(formData.get("id") ?? "")}`;
   } finally {
     await sql.end({ timeout: 1 });
@@ -363,6 +378,7 @@ export async function createIncomeAction(formData: FormData) {
 
   try {
     await sql.unsafe(bootstrapSql);
+    await assertCurrentMonthOpen(sql, formData);
     const type = String(formData.get("type") ?? "recurring");
 
     if (type === "one_time") {
@@ -404,6 +420,7 @@ export async function updateIncomeAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     const type = String(formData.get("type") ?? "recurring");
     const id = String(formData.get("id") ?? "");
 
@@ -443,6 +460,7 @@ export async function deleteIncomeAction(formData: FormData) {
   }
 
   try {
+    await assertCurrentMonthOpen(sql, formData);
     const type = String(formData.get("type") ?? "recurring");
     const id = String(formData.get("id") ?? "");
 
@@ -502,6 +520,13 @@ export async function closeCurrentMonthAction() {
 
   try {
     await sql.unsafe(bootstrapSql);
+    const existingSnapshot = await sql<{ closed_at: string | null }[]>`
+      select closed_at::text from monthly_snapshots where month_key = ${monthKey} limit 1
+    `;
+
+    if (existingSnapshot[0]?.closed_at) {
+      redirect("/dashboard?flash=Este%20mes%20ja%20esta%20fechado&tone=error");
+    }
 
     const [accounts, weeklyLogs, fixedExpenses, recurringIncome, oneTimeIncome] = await Promise.all([
       sql<{ balance: string }[]>`select balance::text from accounts`,
@@ -565,6 +590,42 @@ export async function closeCurrentMonthAction() {
   revalidatePath("/dashboard");
   revalidatePath("/settings");
   redirect("/dashboard?flash=Mes%20fechado%20com%20sucesso&tone=success");
+}
+
+export async function reopenCurrentMonthAction() {
+  const sql = await getDbClient();
+  if (!sql) {
+    redirect("/dashboard?flash=Banco%20indisponivel&tone=error");
+  }
+
+  const monthKey = currentMonthKey();
+
+  try {
+    await sql.unsafe(bootstrapSql);
+
+    const existingSnapshot = await sql<{ closed_at: string | null }[]>`
+      select closed_at::text from monthly_snapshots where month_key = ${monthKey} limit 1
+    `;
+
+    if (!existingSnapshot[0]?.closed_at) {
+      redirect("/dashboard?flash=Este%20mes%20ja%20esta%20aberto&tone=error");
+    }
+
+    await sql`
+      update monthly_snapshots
+      set closed_at = null, updated_at = now()
+      where month_key = ${monthKey}
+    `;
+  } finally {
+    await sql.end({ timeout: 1 });
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  revalidatePath("/cards");
+  revalidatePath("/fixed-expenses");
+  revalidatePath("/planning");
+  redirect("/dashboard?flash=Mes%20reaberto%20com%20sucesso&tone=success");
 }
 
 function parseMoney(value: FormDataEntryValue | null) {
@@ -634,4 +695,18 @@ function redirectWithMessage(
 ) {
   const basePath = String(formData.get("redirect_to") ?? "/dashboard");
   redirect(`${basePath}?flash=${encodeURIComponent(message)}&tone=${tone}`);
+}
+
+async function assertCurrentMonthOpen(
+  sql: NonNullable<Awaited<ReturnType<typeof getDbClient>>>,
+  formData: FormData,
+) {
+  const monthKey = currentMonthKey();
+  const rows = await sql<{ closed_at: string | null }[]>`
+    select closed_at::text from monthly_snapshots where month_key = ${monthKey} limit 1
+  `;
+
+  if (rows[0]?.closed_at) {
+    redirectWithMessage(formData, `Mes ${monthKey} esta fechado. Reabra o mes para editar os dados.`, "error");
+  }
 }

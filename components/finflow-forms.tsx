@@ -11,6 +11,7 @@ export function AccountForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   initialData?: {
@@ -20,6 +21,7 @@ export function AccountForm({
     balanceInput?: string;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -31,22 +33,24 @@ export function AccountForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field field-span-2">
-          <span>Nome da conta</span>
-          <input defaultValue={initialData?.name} name="name" placeholder="Ex.: Nubank principal" required />
-        </label>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field field-span-2">
+            <span>Nome da conta</span>
+            <input defaultValue={initialData?.name} name="name" placeholder="Ex.: Nubank principal" required />
+          </label>
 
-        <label className="field">
-          <span>Banco</span>
-          <input defaultValue={initialData?.bank} name="bank" placeholder="Ex.: Nubank" />
-        </label>
+          <label className="field">
+            <span>Banco</span>
+            <input defaultValue={initialData?.bank} name="bank" placeholder="Ex.: Nubank" />
+          </label>
 
-        <label className="field">
-          <span>Saldo inicial</span>
-          <input defaultValue={initialData?.balanceInput} name="balance" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-      </div>
+          <label className="field">
+            <span>Saldo inicial</span>
+            <input defaultValue={initialData?.balanceInput} name="balance" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
@@ -56,6 +60,7 @@ export function AccountForm({
           className="ghost-button"
           idleLabel={initialData?.id ? "Atualizar conta" : "Vincular nova conta"}
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
@@ -72,6 +77,7 @@ export function CardForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   initialData?: {
@@ -82,6 +88,7 @@ export function CardForm({
     dueDay?: number;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -93,35 +100,37 @@ export function CardForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field field-span-2">
-          <span>Apelido do cartao</span>
-          <input defaultValue={initialData?.nickname} name="nickname" placeholder="Ex.: Ultravioleta" required />
-        </label>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field field-span-2">
+            <span>Apelido do cartao</span>
+            <input defaultValue={initialData?.nickname} name="nickname" placeholder="Ex.: Ultravioleta" required />
+          </label>
 
-        <label className="field">
-          <span>Limite</span>
-          <input defaultValue={initialData?.creditLimitInput} name="credit_limit" inputMode="decimal" placeholder="R$ 5.000" required />
-        </label>
+          <label className="field">
+            <span>Limite</span>
+            <input defaultValue={initialData?.creditLimitInput} name="credit_limit" inputMode="decimal" placeholder="R$ 5.000" required />
+          </label>
 
-        <label className="field">
-          <span>Fechamento</span>
-          <select name="closing_day" defaultValue={String(initialData?.closingDay ?? 5)}>
-            <option value="5">Dia 05</option>
-            <option value="10">Dia 10</option>
-            <option value="15">Dia 15</option>
-          </select>
-        </label>
+          <label className="field">
+            <span>Fechamento</span>
+            <select name="closing_day" defaultValue={String(initialData?.closingDay ?? 5)}>
+              <option value="5">Dia 05</option>
+              <option value="10">Dia 10</option>
+              <option value="15">Dia 15</option>
+            </select>
+          </label>
 
-        <label className="field">
-          <span>Vencimento</span>
-          <select name="due_day" defaultValue={String(initialData?.dueDay ?? 12)}>
-            <option value="12">Dia 12</option>
-            <option value="20">Dia 20</option>
-            <option value="28">Dia 28</option>
-          </select>
-        </label>
-      </div>
+          <label className="field">
+            <span>Vencimento</span>
+            <select name="due_day" defaultValue={String(initialData?.dueDay ?? 12)}>
+              <option value="12">Dia 12</option>
+              <option value="20">Dia 20</option>
+              <option value="28">Dia 28</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
@@ -131,6 +140,7 @@ export function CardForm({
           className="ghost-button"
           idleLabel={initialData?.id ? "Atualizar cartao" : "Salvar cartao"}
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
@@ -149,6 +159,7 @@ export function WeeklyLogForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   hasCards: boolean;
@@ -160,6 +171,7 @@ export function WeeklyLogForm({
     amountInput?: string;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel">
@@ -170,28 +182,30 @@ export function WeeklyLogForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field">
-          <span>Cartao</span>
-          <select name="card_id" defaultValue={initialData?.cardId ?? cards[0]?.id ?? ""} disabled={!hasCards}>
-            {cards.map((card) => (
-              <option key={card.id} value={card.id}>
-                {card.nickname}
-              </option>
-            ))}
-          </select>
-        </label>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field">
+            <span>Cartao</span>
+            <select name="card_id" defaultValue={initialData?.cardId ?? cards[0]?.id ?? ""} disabled={!hasCards || disabled}>
+              {cards.map((card) => (
+                <option key={card.id} value={card.id}>
+                  {card.nickname}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="field">
-          <span>Semana</span>
-          <input defaultValue={initialData?.week} name="week_label" placeholder="Semana 1" required />
-        </label>
+          <label className="field">
+            <span>Semana</span>
+            <input defaultValue={initialData?.week} name="week_label" placeholder="Semana 1" required />
+          </label>
 
-        <label className="field">
-          <span>Acumulado</span>
-          <input defaultValue={initialData?.amountInput} name="cumulative_amount" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-      </div>
+          <label className="field">
+            <span>Acumulado</span>
+            <input defaultValue={initialData?.amountInput} name="cumulative_amount" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/cards"} />
@@ -199,9 +213,17 @@ export function WeeklyLogForm({
       <div className="form-actions">
         <SubmitButton
           className="ghost-button"
-          idleLabel={hasCards ? (initialData?.id ? "Atualizar lancamento" : "Salvar lancamento") : "Cadastre um cartao primeiro"}
+          idleLabel={
+            disabled
+              ? "Mes fechado"
+              : hasCards
+                ? initialData?.id
+                  ? "Atualizar lancamento"
+                  : "Salvar lancamento"
+                : "Cadastre um cartao primeiro"
+          }
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
-          disabled={!hasCards}
+          disabled={!hasCards || disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
@@ -218,6 +240,7 @@ export function FixedExpenseForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   initialData?: {
@@ -230,6 +253,7 @@ export function FixedExpenseForm({
     recurringType?: string;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -241,35 +265,37 @@ export function FixedExpenseForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field field-span-2">
-          <span>Nome do gasto</span>
-          <input defaultValue={initialData?.title} name="name" placeholder="Ex.: Aluguel" required />
-        </label>
-        <label className="field">
-          <span>Valor</span>
-          <input defaultValue={initialData?.amountInput} name="amount" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-        <label className="field">
-          <span>Categoria</span>
-          <input defaultValue={initialData?.category} name="category" placeholder="Moradia" required />
-        </label>
-        <label className="field">
-          <span>Forma de pagamento</span>
-          <input defaultValue={initialData?.paymentMethod} name="payment_method" placeholder="Debito em conta" required />
-        </label>
-        <label className="field">
-          <span>Inicio</span>
-          <input defaultValue={initialData?.startsOn} name="starts_on" type="date" required />
-        </label>
-        <label className="field">
-          <span>Recorrencia</span>
-          <select name="recurring_type" defaultValue={initialData?.recurringType ?? "monthly"}>
-            <option value="monthly">Mensal</option>
-            <option value="yearly">Anual</option>
-          </select>
-        </label>
-      </div>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field field-span-2">
+            <span>Nome do gasto</span>
+            <input defaultValue={initialData?.title} name="name" placeholder="Ex.: Aluguel" required />
+          </label>
+          <label className="field">
+            <span>Valor</span>
+            <input defaultValue={initialData?.amountInput} name="amount" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+          <label className="field">
+            <span>Categoria</span>
+            <input defaultValue={initialData?.category} name="category" placeholder="Moradia" required />
+          </label>
+          <label className="field">
+            <span>Forma de pagamento</span>
+            <input defaultValue={initialData?.paymentMethod} name="payment_method" placeholder="Debito em conta" required />
+          </label>
+          <label className="field">
+            <span>Inicio</span>
+            <input defaultValue={initialData?.startsOn} name="starts_on" type="date" required />
+          </label>
+          <label className="field">
+            <span>Recorrencia</span>
+            <select name="recurring_type" defaultValue={initialData?.recurringType ?? "monthly"}>
+              <option value="monthly">Mensal</option>
+              <option value="yearly">Anual</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/fixed-expenses"} />
@@ -279,6 +305,7 @@ export function FixedExpenseForm({
           className="ghost-button"
           idleLabel={initialData?.id ? "Atualizar gasto fixo" : "Salvar gasto fixo"}
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
@@ -295,6 +322,7 @@ export function PlanningForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   initialData?: {
@@ -304,6 +332,7 @@ export function PlanningForm({
     actualInput?: string;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-secondary">
@@ -315,20 +344,22 @@ export function PlanningForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field field-span-2">
-          <span>Categoria</span>
-          <input defaultValue={initialData?.category} name="category" placeholder="Ex.: Mercado" required />
-        </label>
-        <label className="field">
-          <span>Planejado</span>
-          <input defaultValue={initialData?.plannedInput} name="planned_amount" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-        <label className="field">
-          <span>Realizado</span>
-          <input defaultValue={initialData?.actualInput} name="actual_amount" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-      </div>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field field-span-2">
+            <span>Categoria</span>
+            <input defaultValue={initialData?.category} name="category" placeholder="Ex.: Mercado" required />
+          </label>
+          <label className="field">
+            <span>Planejado</span>
+            <input defaultValue={initialData?.plannedInput} name="planned_amount" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+          <label className="field">
+            <span>Realizado</span>
+            <input defaultValue={initialData?.actualInput} name="actual_amount" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
@@ -338,6 +369,7 @@ export function PlanningForm({
           className="ghost-button"
           idleLabel={initialData?.id ? "Atualizar planejamento" : "Salvar planejamento"}
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>
@@ -354,6 +386,7 @@ export function IncomeForm({
   initialData,
   cancelHref,
   redirectTo,
+  disabled,
 }: {
   action: ActionFn;
   initialData?: {
@@ -365,6 +398,7 @@ export function IncomeForm({
     startsOn?: string;
   };
   redirectTo?: string;
+  disabled?: boolean;
 } & CancelProps) {
   return (
     <form action={action} className="panel panel-primary">
@@ -376,35 +410,37 @@ export function IncomeForm({
         </div>
       </div>
 
-      <div className="form-grid form-grid-three">
-        <label className="field field-span-2">
-          <span>Nome</span>
-          <input defaultValue={initialData?.name} name="name" placeholder="Ex.: Salario" required />
-        </label>
-        <label className="field">
-          <span>Valor</span>
-          <input defaultValue={initialData?.amountInput} name="amount" inputMode="decimal" placeholder="R$ 0,00" required />
-        </label>
-        <label className="field">
-          <span>Tipo</span>
-          <select name="type" defaultValue={initialData?.type ?? "recurring"}>
-            <option value="recurring">Recorrente</option>
-            <option value="one_time">Pontual</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>Frequencia</span>
-          <select name="frequency" defaultValue={initialData?.frequency ?? "monthly"}>
-            <option value="monthly">Mensal</option>
-            <option value="yearly">Anual</option>
-            <option value="one_time">Pontual</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>Data base</span>
-          <input defaultValue={initialData?.startsOn} name="starts_on" type="date" required />
-        </label>
-      </div>
+      <fieldset className="form-fieldset" disabled={disabled}>
+        <div className="form-grid form-grid-three">
+          <label className="field field-span-2">
+            <span>Nome</span>
+            <input defaultValue={initialData?.name} name="name" placeholder="Ex.: Salario" required />
+          </label>
+          <label className="field">
+            <span>Valor</span>
+            <input defaultValue={initialData?.amountInput} name="amount" inputMode="decimal" placeholder="R$ 0,00" required />
+          </label>
+          <label className="field">
+            <span>Tipo</span>
+            <select name="type" defaultValue={initialData?.type ?? "recurring"}>
+              <option value="recurring">Recorrente</option>
+              <option value="one_time">Pontual</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Frequencia</span>
+            <select name="frequency" defaultValue={initialData?.frequency ?? "monthly"}>
+              <option value="monthly">Mensal</option>
+              <option value="yearly">Anual</option>
+              <option value="one_time">Pontual</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Data base</span>
+            <input defaultValue={initialData?.startsOn} name="starts_on" type="date" required />
+          </label>
+        </div>
+      </fieldset>
 
       {initialData?.id ? <input type="hidden" name="id" value={initialData.id} /> : null}
       <input type="hidden" name="redirect_to" value={redirectTo ?? "/planning"} />
@@ -414,6 +450,7 @@ export function IncomeForm({
           className="ghost-button"
           idleLabel={initialData?.id ? "Atualizar receita" : "Salvar receita"}
           pendingLabel={initialData?.id ? "Atualizando..." : "Salvando..."}
+          disabled={disabled}
         />
         {cancelHref ? (
           <a className="text-link" href={cancelHref}>

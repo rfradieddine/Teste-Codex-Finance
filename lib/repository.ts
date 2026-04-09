@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { bootstrapSql, getDbClient } from "@/lib/db";
 import { mockSnapshot } from "@/lib/mock-data";
-import type { FinFlowSnapshot, IncomeEntry } from "@/lib/types";
+import type { FinFlowSnapshot, IncomeEntry, MonthLockState } from "@/lib/types";
 
 export async function getFinFlowSnapshot(): Promise<FinFlowSnapshot> {
   noStore();
@@ -276,26 +276,52 @@ export function getDatabaseStatus() {
 }
 
 export async function getMonthlyClosureStatus() {
+  const state = await getCurrentMonthLockState();
+  return state.statusMessage;
+}
+
+export async function getCurrentMonthLockState(): Promise<MonthLockState> {
+  const monthKey = getCurrentMonthKey();
+
   if (!process.env.DATABASE_URL) {
-    return "Modo demo: sem fechamento mensal persistido.";
+    return {
+      monthKey,
+      isClosed: false,
+      statusMessage: "Modo demo: sem fechamento mensal persistido.",
+      actionLabel: "Fechar mes atual",
+    };
   }
 
   const sql = await getDbClient();
   if (!sql) {
-    return "Banco indisponivel no momento.";
+    return {
+      monthKey,
+      isClosed: false,
+      statusMessage: "Banco indisponivel no momento.",
+      actionLabel: "Fechar mes atual",
+    };
   }
 
   try {
     await sql.unsafe(bootstrapSql);
-    const monthKey = getCurrentMonthKey();
     const rows = await sql<{ closed_at: string | null }[]>`
       select closed_at::text from monthly_snapshots where month_key = ${monthKey} limit 1
     `;
 
     const closedAt = rows[0]?.closed_at;
     return closedAt
-      ? `Mes ${monthKey} fechado em ${formatDateTime(closedAt)}.`
-      : `Mes ${monthKey} ainda aberto.`;
+      ? {
+          monthKey,
+          isClosed: true,
+          statusMessage: `Mes ${monthKey} fechado em ${formatDateTime(closedAt)}.`,
+          actionLabel: "Reabrir mes atual",
+        }
+      : {
+          monthKey,
+          isClosed: false,
+          statusMessage: `Mes ${monthKey} ainda aberto.`,
+          actionLabel: "Fechar mes atual",
+        };
   } finally {
     await sql.end({ timeout: 1 });
   }

@@ -10,7 +10,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { IncomeForm, PlanningForm } from "@/components/finflow-forms";
 import { FlashNotice, IncomesList, PageHead, PlanningList, QuickStats, TipPanel } from "@/components/finflow-sections";
-import { getFinFlowSnapshot } from "@/lib/repository";
+import { getCurrentMonthLockState, getFinFlowSnapshot } from "@/lib/repository";
 
 export default async function PlanningPage({
   searchParams,
@@ -18,6 +18,7 @@ export default async function PlanningPage({
   searchParams?: Promise<{ edit?: string; id?: string; incomeType?: "recurring" | "one_time"; flash?: string; tone?: "success" | "error" }>;
 }) {
   const snapshot = await getFinFlowSnapshot();
+  const monthState = await getCurrentMonthLockState();
   const params = await searchParams;
 
   const selectedPlanning =
@@ -34,6 +35,12 @@ export default async function PlanningPage({
         metrics={snapshot.heroMetrics}
       />
       <FlashNotice message={params?.flash} tone={params?.tone} />
+      {monthState.isClosed ? (
+        <FlashNotice
+          message={`Mes ${monthState.monthKey} fechado. Orcamento e receitas ficam bloqueados ate a reabertura.`}
+          tone="error"
+        />
+      ) : null}
 
       <div className="dashboard-grid">
         <div className="main-column">
@@ -42,6 +49,7 @@ export default async function PlanningPage({
             initialData={selectedPlanning}
             cancelHref={selectedPlanning ? "/planning" : undefined}
             redirectTo="/planning"
+            disabled={monthState.isClosed}
           />
           <section className="panel compact-panel">
             <div className="section-header">
@@ -60,6 +68,7 @@ export default async function PlanningPage({
             planning={snapshot.planning}
             deleteAction={deletePlanningAction}
             editHrefBase="/planning"
+            locked={monthState.isClosed}
           />
         </div>
 
@@ -69,12 +78,17 @@ export default async function PlanningPage({
             initialData={selectedIncome}
             cancelHref={selectedIncome ? "/planning" : undefined}
             redirectTo="/planning"
+            disabled={monthState.isClosed}
           />
-          <IncomesList incomes={snapshot.incomes} deleteAction={deleteIncomeAction} editHrefBase="/planning" />
+          <IncomesList incomes={snapshot.incomes} deleteAction={deleteIncomeAction} editHrefBase="/planning" locked={monthState.isClosed} />
           <QuickStats stats={snapshot.quickStats} />
           <TipPanel
             title="Automacao mensal"
-            description="Receitas recorrentes anuais e mensais ja entram no mes atual pela vigencia. O proximo incremento pode gerar ocorrencias fechadas por mes se voce quiser historico detalhado."
+            description={
+              monthState.isClosed
+                ? "O fechamento agora tambem protege receitas e planejamento para que o mes nao seja alterado acidentalmente."
+                : "Receitas recorrentes anuais e mensais ja entram no mes atual pela vigencia. O proximo incremento pode gerar ocorrencias fechadas por mes se voce quiser historico detalhado."
+            }
           />
         </div>
       </div>

@@ -1,12 +1,13 @@
-import { closeCurrentMonthAction } from "@/app/actions";
+import { closeCurrentMonthAction, reopenCurrentMonthAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { PageHead, TipPanel } from "@/components/finflow-sections";
 import { bootstrapSql } from "@/lib/db";
-import { getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
+import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
 
 export default async function SettingsPage() {
   const snapshot = await getFinFlowSnapshot();
   const closureStatus = await getMonthlyClosureStatus();
+  const monthState = await getCurrentMonthLockState();
 
   return (
     <AppShell currentPath="/settings" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
@@ -23,9 +24,9 @@ export default async function SettingsPage() {
               <h2>Status do banco</h2>
               <p>{getDatabaseStatus()}</p>
             </div>
-            <form action={closeCurrentMonthAction}>
+            <form action={monthState.isClosed ? reopenCurrentMonthAction : closeCurrentMonthAction}>
               <button className="mini-button mini-button-secondary" type="submit">
-                Fechar mes atual
+                {monthState.actionLabel}
               </button>
             </form>
           </div>
@@ -39,7 +40,11 @@ export default async function SettingsPage() {
 
         <TipPanel
           title="Como publicar"
-          description="Na Vercel, conecte um banco Postgres compativel com DATABASE_URL. A camada server-side ja esta isolada para a integracao entrar sem refazer a UI."
+          description={
+            process.env.APP_PIN
+              ? "O app ja aceita protecao minima por PIN via APP_PIN. Mantenha APP_PIN e DATABASE_URL configuradas na Vercel."
+              : "Na Vercel, conecte um banco Postgres compativel com DATABASE_URL. Se quiser protecao minima, configure tambem APP_PIN."
+          }
         />
       </div>
     </AppShell>

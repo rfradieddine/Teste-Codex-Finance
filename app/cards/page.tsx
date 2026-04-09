@@ -22,7 +22,7 @@ import {
   TipPanel,
   WeeklyLogsList,
 } from "@/components/finflow-sections";
-import { getDatabaseStatus, getFinFlowSnapshot } from "@/lib/repository";
+import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot } from "@/lib/repository";
 
 export default async function CardsPage({
   searchParams,
@@ -30,6 +30,7 @@ export default async function CardsPage({
   searchParams?: Promise<{ edit?: string; id?: string; flash?: string; tone?: "success" | "error" }>;
 }) {
   const snapshot = await getFinFlowSnapshot();
+  const monthState = await getCurrentMonthLockState();
   const params = await searchParams;
   const edit = params?.edit;
   const id = params?.id;
@@ -46,6 +47,12 @@ export default async function CardsPage({
         metrics={snapshot.heroMetrics}
       />
       <FlashNotice message={params?.flash} tone={params?.tone} />
+      {monthState.isClosed ? (
+        <FlashNotice
+          message={`Mes ${monthState.monthKey} fechado. Reabra em Configuracoes ou Dashboard para editar contas, cartoes e lancamentos.`}
+          tone="error"
+        />
+      ) : null}
 
       <div className="dashboard-grid">
         <div className="main-column">
@@ -54,12 +61,14 @@ export default async function CardsPage({
             initialData={selectedAccount}
             cancelHref={selectedAccount ? "/cards" : undefined}
             redirectTo="/cards"
+            disabled={monthState.isClosed}
           />
           <CardForm
             action={selectedCard ? updateCardAction : createCardAction}
             initialData={selectedCard}
             cancelHref={selectedCard ? "/cards" : undefined}
             redirectTo="/cards"
+            disabled={monthState.isClosed}
           />
           <WeeklyLogForm
             action={selectedWeeklyLog ? updateWeeklyLogAction : createWeeklyLogAction}
@@ -68,23 +77,29 @@ export default async function CardsPage({
             initialData={selectedWeeklyLog}
             cancelHref={selectedWeeklyLog ? "/cards" : undefined}
             redirectTo="/cards"
+            disabled={monthState.isClosed}
           />
           <WeeklyLogsList
             weeklyLogs={snapshot.weeklyLogs}
             deleteAction={deleteWeeklyLogAction}
             editHrefBase="/cards"
+            locked={monthState.isClosed}
           />
         </div>
 
         <div className="side-column">
           <CardPreview card={snapshot.cards[0]} />
           <QuickStats stats={snapshot.quickStats.slice(0, 2)} />
-          <AccountsList accounts={snapshot.accounts} deleteAction={deleteAccountAction} editHrefBase="/cards" />
-          <CardsList cards={snapshot.cards} deleteAction={deleteCardAction} editHrefBase="/cards" />
-          <FixedExpensesList fixedExpenses={snapshot.fixedExpenses} />
+          <AccountsList accounts={snapshot.accounts} deleteAction={deleteAccountAction} editHrefBase="/cards" locked={monthState.isClosed} />
+          <CardsList cards={snapshot.cards} deleteAction={deleteCardAction} editHrefBase="/cards" locked={monthState.isClosed} />
+          <FixedExpensesList fixedExpenses={snapshot.fixedExpenses} locked={monthState.isClosed} />
           <TipPanel
             title="Direcao de UX"
-            description="As secoes desta tela agora criam, editam e removem dados reais quando DATABASE_URL estiver configurada."
+            description={
+              monthState.isClosed
+                ? "O mes atual esta fechado, entao as acoes financeiras ficam bloqueadas ate a reabertura."
+                : "As secoes desta tela agora criam, editam e removem dados reais quando DATABASE_URL estiver configurada."
+            }
           />
         </div>
       </div>

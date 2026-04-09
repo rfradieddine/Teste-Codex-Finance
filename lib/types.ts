@@ -89,3 +89,10 @@ export type FinFlowSnapshot = {
   monthlyComparison: MonthlyMetric[];
   quickStats: MonthlyMetric[];
 };
+
+export type MonthLockState = {
+  monthKey: string;
+  isClosed: boolean;
+  statusMessage: string;
+  actionLabel: string;
+};

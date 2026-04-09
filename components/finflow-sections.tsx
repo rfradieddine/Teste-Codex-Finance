@@ -112,10 +112,12 @@ export function AccountsList({
   accounts,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   accounts: Account[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel compact-panel">
@@ -147,12 +149,13 @@ export function AccountsList({
               <span>{account.status}</span>
             </div>
             <div className="row-actions">
-              {editHrefBase && account.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && account.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=account&id=${account.id}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={account.id ?? ""} />
                   <button className="mini-button" type="submit">
@@ -172,10 +175,12 @@ export function CardsList({
   cards,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   cards: Card[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel compact-panel">
@@ -207,12 +212,13 @@ export function CardsList({
               <span>{card.status ?? card.usedAmount}</span>
             </div>
             <div className="row-actions">
-              {editHrefBase && card.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && card.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=card&id=${card.id}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={card.id ?? ""} />
                   <button className="mini-button" type="submit">
@@ -232,10 +238,12 @@ export function FixedExpensesList({
   fixedExpenses,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   fixedExpenses: FixedExpense[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel compact-panel">
@@ -265,12 +273,13 @@ export function FixedExpensesList({
               <span>{item.status}</span>
             </div>
             <div className="row-actions">
-              {editHrefBase && item.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && item.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=fixed-expense&id=${item.id}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
                   <button className="mini-button" type="submit">
@@ -290,10 +299,12 @@ export function WeeklyLogsList({
   weeklyLogs,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   weeklyLogs: WeeklyLog[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel">
@@ -325,12 +336,13 @@ export function WeeklyLogsList({
               <span>{item.trend}</span>
             </div>
             <div className="row-actions">
-              {editHrefBase && item.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && item.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=weekly-log&id=${item.id}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
                   <button className="mini-button" type="submit">
@@ -380,10 +392,12 @@ export function PlanningList({
   planning,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   planning: PlanningCategory[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel">
@@ -395,6 +409,12 @@ export function PlanningList({
       </div>
 
       <div className="planning-table">
+        {planning.length === 0 ? (
+          <EmptyState
+            title="Nenhuma categoria planejada"
+            description="Crie um orcamento por categoria para comparar o previsto com o realizado."
+          />
+        ) : null}
         {planning.map((item) => (
           <article className="planning-row" key={item.id ?? item.category}>
             <strong>{item.category}</strong>
@@ -402,12 +422,13 @@ export function PlanningList({
             <span>{item.actual}</span>
             <span className={item.status === "Acima" ? "planning-alert" : "planning-ok"}>{item.status}</span>
             <div className="row-actions">
-              {editHrefBase && item.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && item.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=planning&id=${item.id}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={item.id ?? ""} />
                   <button className="mini-button" type="submit">
@@ -427,10 +448,12 @@ export function IncomesList({
   incomes,
   deleteAction,
   editHrefBase,
+  locked,
 }: {
   incomes: IncomeEntry[];
   deleteAction?: ActionFn;
   editHrefBase?: string;
+  locked?: boolean;
 }) {
   return (
     <section className="panel compact-panel">
@@ -462,12 +485,13 @@ export function IncomesList({
               <span>{income.startsOn ?? income.monthKey}</span>
             </div>
             <div className="row-actions">
-              {editHrefBase && income.id ? (
+              {locked ? <span className="lock-badge">Mes fechado</span> : null}
+              {!locked && editHrefBase && income.id ? (
                 <Link className="mini-button mini-button-secondary" href={`${editHrefBase}?edit=income&id=${income.id}&incomeType=${income.type}`}>
                   Editar
                 </Link>
               ) : null}
-              {deleteAction ? (
+              {!locked && deleteAction ? (
                 <form action={deleteAction} className="row-action">
                   <input type="hidden" name="id" value={income.id ?? ""} />
                   <input type="hidden" name="type" value={income.type} />

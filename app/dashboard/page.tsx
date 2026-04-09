@@ -1,7 +1,7 @@
-import { closeCurrentMonthAction } from "@/app/actions";
+import { closeCurrentMonthAction, reopenCurrentMonthAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { DashboardOverview, FlashNotice, PageHead, TipPanel } from "@/components/finflow-sections";
-import { getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
+import { getCurrentMonthLockState, getDatabaseStatus, getFinFlowSnapshot, getMonthlyClosureStatus } from "@/lib/repository";
 
 export default async function DashboardPage({
   searchParams,
@@ -11,6 +11,7 @@ export default async function DashboardPage({
   const snapshot = await getFinFlowSnapshot();
   const params = await searchParams;
   const closureStatus = await getMonthlyClosureStatus();
+  const monthState = await getCurrentMonthLockState();
 
   return (
     <AppShell currentPath="/dashboard" monthLabel={snapshot.currentMonth} closingInfo={snapshot.closingInfo}>
@@ -24,9 +25,9 @@ export default async function DashboardPage({
       <DashboardOverview snapshot={snapshot} />
 
       <footer className="footer-actions">
-        <form action={closeCurrentMonthAction}>
+        <form action={monthState.isClosed ? reopenCurrentMonthAction : closeCurrentMonthAction}>
           <button className="primary-button" type="submit">
-            Fechar mes atual
+            {monthState.actionLabel}
           </button>
         </form>
         <TipPanel
