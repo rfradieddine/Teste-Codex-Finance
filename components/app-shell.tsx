@@ -36,10 +36,10 @@ export function AppShell({ currentPath, monthLabel, closingInfo, children }: App
         </div>
 
         <div className="sidebar-footer">
-          <button className="quick-action" type="button">
+          <Link className="quick-action" href="/cards">
             <span className="quick-action-plus">+</span>
             Lancar semana
-          </button>
+          </Link>
 
           <div className="profile-card">
             <div className="profile-avatar">RS</div>
